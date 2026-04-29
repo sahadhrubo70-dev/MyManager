@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manager - Personal Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 font-sans">
+
+    <nav class="bg-indigo-700 p-4 text-white shadow-lg flex justify-between items-center px-6 md:px-12">
+        <div class="flex items-center gap-2">
+            <i class="fas fa-user-tie text-2xl"></i>
+            <h1 class="text-xl font-bold tracking-wider uppercase">Manager</h1>
+        </div>
+        <div class="text-right">
+            <p id="live-date" class="text-xs opacity-80"></p>
+            <p id="live-time" class="text-lg font-mono font-bold"></p>
+        </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto p-4 md:p-8">
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border-b-4 border-indigo-500">
+                <h3 class="text-gray-500 text-sm font-bold uppercase mb-2">Main Balance</h3>
+                <div class="flex items-center gap-2 mb-4">
+                    <input type="number" id="initBalance" placeholder="Enter Amount" class="w-full border p-2 rounded-lg outline-none focus:ring-2 focus:ring-indigo-400">
+                    <button onclick="setBalance()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-800 transition">Set</button>
+                </div>
+                <p class="text-3xl font-black text-gray-800">৳ <span id="displayBalance">0.00</span></p>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border-b-4 border-orange-400">
+                <h3 class="text-gray-500 text-sm font-bold uppercase mb-2">Current Weather</h3>
+                <div id="weather-box" class="flex items-center gap-4">
+                    <i class="fas fa-cloud-sun text-4xl text-orange-400"></i>
+                    <div>
+                        <p class="text-2xl font-bold">32°C</p>
+                        <p class="text-gray-400 text-sm italic">Dhaka, Bangladesh</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-indigo-900 p-6 rounded-2xl shadow-sm text-white flex flex-col justify-center items-center">
+                <i class="fas fa-bell text-2xl mb-2 animate-bounce"></i>
+                <p class="text-center text-sm">No reminders for today!</p>
+                <button class="mt-2 text-xs bg-white text-indigo-900 px-3 py-1 rounded-full font-bold">Set Reminder</button>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 mb-8">
+            <h2 class="text-lg font-bold mb-4 flex items-center gap-2 text-rose-600">
+                <i class="fas fa-wallet"></i> Quick Expense Tracker
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <select id="expCategory" class="border p-3 rounded-xl outline-none focus:ring-2 focus:ring-rose-400 bg-gray-50">
+                    <option value="House Rent">House/Mess/Hostel Rent</option>
+                    <option value="Market">Monthly Market</option>
+                    <option value="Loan EMI">Loan EMI</option>
+                    <option value="Mobile">Mobile Recharge</option>
+                    <option value="Utility Bills">Utility Bills (Current/Gas/Water)</option>
+                    <option value="Transport">Transport</option>
+                    <option value="Extra">Extra/Others</option>
+                </select>
+                <input type="number" id="expAmount" placeholder="Amount to spend" class="border p-3 rounded-xl outline-none focus:ring-2 focus:ring-rose-400 bg-gray-50">
+                <button onclick="deductExpense()" class="bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-rose-200 uppercase tracking-widest">Reduce Balance</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="bg-blue-50 p-6 rounded-2xl border-2 border-dashed border-blue-200">
+                <h2 class="text-blue-700 font-black text-xl mb-4 flex items-center gap-2">
+                    <i class="fas fa-graduation-cap"></i> Student Section
+                </h2>
+                <div class="space-y-3">
+                    <button class="w-full bg-white p-3 rounded-xl shadow-sm hover:shadow-md transition text-left flex justify-between items-center text-blue-800 font-semibold">
+                        Class Routine & Schedule <i class="fas fa-chevron-right text-xs"></i>
+                    </button>
+                    <button class="w-full bg-white p-3 rounded-xl shadow-sm hover:shadow-md transition text-left flex justify-between items-center text-blue-800 font-semibold">
+                        Assignment Cover Page Maker <i class="fas fa-plus-circle text-xs"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-emerald-50 p-6 rounded-2xl border-2 border-dashed border-emerald-200">
+                <h2 class="text-emerald-700 font-black text-xl mb-4 flex items-center gap-2">
+                    <i class="fas fa-briefcase"></i> Professional Section
+                </h2>
+                <div class="space-y-3">
+                    <button class="w-full bg-white p-3 rounded-xl shadow-sm hover:shadow-md transition text-left flex justify-between items-center text-emerald-800 font-semibold">
+                        Work Schedule & Tasks <i class="fas fa-calendar-alt text-xs"></i>
+                    </button>
+                    <button class="w-full bg-white p-3 rounded-xl shadow-sm hover:shadow-md transition text-left flex justify-between items-center text-emerald-800 font-semibold">
+                        Download Monthly Statement <i class="fas fa-file-download text-xs"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Live Date & Time Function
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('live-date').innerText = now.toDateString();
+            document.getElementById('live-time').innerText = now.toLocaleTimeString();
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Expense Logic
+        let balance = 0;
+
+        function setBalance() {
+            let input = document.getElementById('initBalance').value;
+            if (input === "" || input < 0) {
+                alert("Please enter a valid balance!");
+                return;
+            }
+            balance = parseFloat(input);
+            updateUI();
+            document.getElementById('initBalance').value = "";
+        }
+
+        function deductExpense() {
+            let amount = document.getElementById('expAmount').value;
+            let category = document.getElementById('expCategory').value;
+
+            if (amount === "" || amount <= 0) {
+                alert("Enter a valid expense amount!");
+                return;
+            }
+
+            if (parseFloat(amount) > balance) {
+                alert("Insufficient Balance! Slow down on spending.");
+                return;
+            }
+
+            balance -= parseFloat(amount);
+            updateUI();
+            alert("৳" + amount + " deducted for " + category);
+            document.getElementById('expAmount').value = "";
+        }
+
+        function updateUI() {
+            document.getElementById('displayBalance').innerText = balance.toLocaleString('en-IN', {minimumFractionDigits: 2});
+        }
+    </script>
+</body>
+</html>
