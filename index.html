@@ -3,20 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manager - Personal Smart Assistant</title>
+    <title>Manager - All-in-One Smart Assistant</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
-        body { font-family: 'Inter', sans-serif; }
+        body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
+        .custom-scroll::-webkit-scrollbar { width: 5px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-900 min-h-screen">
+<body class="bg-slate-50 text-slate-900 min-h-screen pb-20">
 
     <nav class="bg-indigo-700 text-white p-4 shadow-xl flex justify-between items-center px-6 sticky top-0 z-50">
         <div class="flex items-center gap-2">
             <i class="fas fa-user-shield text-2xl text-yellow-400"></i>
-            <h1 class="text-xl font-bold tracking-tighter uppercase italic">Manager</h1>
+            <h1 class="text-xl font-bold tracking-tighter uppercase italic text-white">Manager</h1>
         </div>
         <div class="text-right">
             <p id="live-date" class="text-[10px] uppercase tracking-widest opacity-70"></p>
@@ -28,7 +32,7 @@
         
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-                <h3 class="text-slate-400 text-xs font-bold uppercase mb-2">Total Wallet Balance</h3>
+                <h3 class="text-slate-400 text-xs font-bold uppercase mb-2">Total Balance</h3>
                 <div class="flex items-center gap-2 mb-4">
                     <input type="number" id="initBalance" placeholder="Set Balance" class="w-full border border-slate-200 p-2 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
                     <button onclick="setBalance()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-700 transition font-bold">Set</button>
@@ -39,119 +43,134 @@
             <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
                 <div>
                     <h3 class="text-slate-400 text-xs font-bold uppercase mb-1">Live Weather</h3>
-                    <p id="temp" class="text-2xl font-black">--°C</p>
-                    <p id="city" class="text-slate-400 text-[10px] uppercase font-bold italic tracking-widest">Detecting...</p>
+                    <p id="temp" class="text-2xl font-black">32°C</p>
+                    <p id="city" class="text-slate-400 text-[10px] uppercase font-bold italic tracking-widest">Dhaka, Bangladesh</p>
                 </div>
-                <i id="weather-icon" class="fas fa-cloud-sun text-4xl text-orange-400"></i>
+                <i class="fas fa-cloud-sun text-4xl text-orange-400"></i>
             </div>
 
             <div class="bg-indigo-900 p-6 rounded-3xl shadow-sm text-white flex flex-col justify-center relative overflow-hidden">
-                <div class="z-10">
-                    <h3 class="text-indigo-300 text-xs font-bold uppercase mb-1">System Status</h3>
-                    <p id="status-msg" class="text-sm font-medium">Monitoring Tasks...</p>
-                </div>
-                <i class="fas fa-bell text-6xl absolute -right-2 -bottom-2 opacity-10 rotate-12"></i>
+                <h3 class="text-indigo-300 text-xs font-bold uppercase mb-1">Quick Action</h3>
+                <button onclick="downloadStatement()" class="bg-white text-indigo-900 py-2 px-4 rounded-xl font-bold text-xs mt-2 hover:bg-yellow-400 transition z-10 shadow-lg">
+                    <i class="fas fa-file-download mr-2"></i>Download Statement
+                </button>
+                <i class="fas fa-receipt text-6xl absolute -right-2 -bottom-2 opacity-10 rotate-12"></i>
             </div>
         </div>
 
         <div class="bg-white p-6 rounded-3xl shadow-md border border-slate-100">
             <h2 class="text-lg font-bold mb-6 flex items-center gap-2 text-indigo-600">
-                <i class="fas fa-calendar-plus"></i> Add New Task / Expense
+                <i class="fas fa-calendar-plus"></i> Schedule Expense / Task
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <select id="expCategory" class="border border-slate-200 p-3 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-400 bg-slate-50">
-                    <option value="House Rent">House/Mess Rent</option>
-                    <option value="Market">Monthly Market</option>
+                    <option value="House Rent">House Rent</option>
+                    <option value="Market">Market</option>
                     <option value="EMI">Loan EMI</option>
                     <option value="Mobile">Mobile Recharge</option>
-                    <option value="Bills">Bills (Current/Water/Gas)</option>
+                    <option value="Bills">Utility Bills</option>
                     <option value="Extra">Extra Cost</option>
                 </select>
                 <input type="number" id="expAmount" placeholder="Amount (৳)" class="border border-slate-200 p-3 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-400 bg-slate-50">
                 <input type="datetime-local" id="expDate" class="border border-slate-200 p-3 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-400 bg-slate-50 text-xs">
-                <button onclick="scheduleTask()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-2xl transition shadow-lg uppercase tracking-tighter">Save & Remind</button>
+                <button onclick="scheduleTask()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-2xl transition shadow-lg uppercase tracking-tighter">Schedule</button>
             </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div class="bg-white p-6 rounded-3xl shadow-md border border-slate-100">
                 <h2 class="text-lg font-bold mb-4 text-orange-600 flex items-center gap-2">
-                    <i class="fas fa-history"></i> Pending Notifications
+                    <i class="fas fa-bell"></i> Reminders & Pending
                 </h2>
-                <div id="pendingList" class="space-y-3 max-h-[300px] overflow-y-auto pr-2">
-                    <p class="text-slate-400 text-sm italic">No upcoming tasks found.</p>
-                </div>
+                <div id="pendingList" class="space-y-3 max-h-[350px] overflow-y-auto pr-2 custom-scroll">
+                    </div>
             </div>
 
             <div class="space-y-4">
-                <div class="bg-blue-600 p-6 rounded-3xl text-white shadow-lg flex justify-between items-center">
-                    <div>
-                        <h2 class="font-black text-xl italic italic">Student Portal</h2>
-                        <p class="text-[10px] opacity-70">Routine & Assignments</p>
+                <div class="bg-blue-600 p-6 rounded-3xl text-white shadow-lg relative overflow-hidden group">
+                    <div class="flex justify-between items-start z-10 relative">
+                        <div>
+                            <h2 class="font-black text-xl italic uppercase tracking-tighter">Student Portal</h2>
+                            <p class="text-[10px] opacity-80 font-bold">Routine & Assignment Helper</p>
+                        </div>
+                        <i class="fas fa-graduation-cap text-4xl opacity-20 group-hover:scale-110 transition"></i>
                     </div>
-                    <button onclick="window.location.href='student-tool.html'" class="bg-white text-blue-600 px-4 py-2 rounded-xl font-bold text-xs">Open</button>
+                    <div class="grid grid-cols-2 gap-3 mt-6 relative z-10">
+                        <button onclick="toggleRoutine()" class="bg-white/20 hover:bg-white hover:text-blue-600 p-3 rounded-2xl text-xs font-bold transition">View Routine</button>
+                        <button onclick="window.location.href='student-tool.html'" class="bg-white/20 hover:bg-white hover:text-blue-600 p-3 rounded-2xl text-xs font-bold transition">Cover Maker</button>
+                    </div>
                 </div>
-                <div class="bg-emerald-600 p-6 rounded-3xl text-white shadow-lg flex justify-between items-center">
-                    <div>
-                        <h2 class="font-black text-xl italic italic">Pro Portal</h2>
-                        <p class="text-[10px] opacity-70">Schedule & Statements</p>
+
+                <div class="bg-emerald-600 p-6 rounded-3xl text-white shadow-lg relative overflow-hidden group">
+                    <div class="flex justify-between items-start z-10 relative">
+                        <div>
+                            <h2 class="font-black text-xl italic uppercase tracking-tighter">Professional Portal</h2>
+                            <p class="text-[10px] opacity-80 font-bold">Schedule & Finance History</p>
+                        </div>
+                        <i class="fas fa-briefcase text-4xl opacity-20 group-hover:scale-110 transition"></i>
                     </div>
-                    <button class="bg-white text-emerald-600 px-4 py-2 rounded-xl font-bold text-xs">Open</button>
+                    <div class="grid grid-cols-2 gap-3 mt-6 relative z-10">
+                        <button onclick="downloadStatement()" class="bg-white/20 hover:bg-white hover:text-emerald-600 p-3 rounded-2xl text-xs font-bold transition col-span-2 italic">Download Full Statement</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <div id="routineModal" class="fixed inset-0 bg-black/60 hidden z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-lg rounded-[2.5rem] p-8 shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-black text-blue-700 italic uppercase tracking-tighter">Class Routine</h2>
+                <button onclick="toggleRoutine()" class="text-slate-300 hover:text-rose-500 transition text-3xl">&times;</button>
+            </div>
+            <div class="space-y-3 mb-6">
+                <input type="text" id="subject" placeholder="Subject Name" class="w-full border border-slate-200 p-3 rounded-2xl outline-none focus:ring-2 focus:ring-blue-400 bg-slate-50 text-sm">
+                <div class="grid grid-cols-2 gap-3">
+                    <input type="time" id="classTime" class="border border-slate-200 p-3 rounded-2xl outline-none focus:ring-2 focus:ring-blue-400 bg-slate-50 text-sm">
+                    <select id="day" class="border border-slate-200 p-3 rounded-2xl outline-none focus:ring-2 focus:ring-blue-400 bg-slate-50 text-sm">
+                        <option>Sat</option><option>Sun</option><option>Mon</option>
+                        <option>Tue</option><option>Wed</option><option>Thu</option><option>Fri</option>
+                    </select>
+                </div>
+                <button onclick="addRoutine()" class="w-full bg-blue-600 text-white py-3 rounded-2xl font-bold shadow-lg shadow-blue-200">Add to Schedule</button>
+            </div>
+            <div id="routineTable" class="max-h-60 overflow-y-auto pr-2 custom-scroll space-y-2"></div>
+        </div>
+    </div>
+
     <script>
-        // 1. Core Variables & Persistence
+        // --- 1. Persisted Data ---
         let balance = parseFloat(localStorage.getItem('m_bal')) || 0;
         let tasks = JSON.parse(localStorage.getItem('m_tasks')) || [];
+        let routines = JSON.parse(localStorage.getItem('m_routines')) || [];
 
-        // 2. Notification Permission Request
-        if (Notification.permission !== "granted") {
-            Notification.requestPermission();
+        // --- 2. System Init ---
+        function init() {
+            if (Notification.permission !== "granted") Notification.requestPermission();
+            setInterval(updateClock, 1000);
+            updateUI();
+            updateClock();
         }
 
-        // 3. Live Update Clock & Tasks
-        function tick() {
+        function updateClock() {
             const now = new Date();
-            document.getElementById('live-date').innerText = now.toDateString();
+            document.getElementById('live-date').innerText = now.toDateString().toUpperCase();
             document.getElementById('live-time').innerText = now.toLocaleTimeString();
-            checkReminders(now);
+            checkReminders(now.getTime());
         }
-        setInterval(tick, 1000); tick();
 
         function updateUI() {
             document.getElementById('displayBalance').innerText = balance.toLocaleString('en-IN', {minimumFractionDigits: 2});
             renderTasks();
+            renderRoutine();
             localStorage.setItem('m_bal', balance);
             localStorage.setItem('m_tasks', JSON.stringify(tasks));
+            localStorage.setItem('m_routines', JSON.stringify(routines));
         }
 
-        // 4. Weather API (Dynamic Location)
-        function getWeather() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(position => {
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
-                    // Using a public free API for location
-                    fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`)
-                    .then(res => res.json())
-                    .then(data => {
-                        document.getElementById('city').innerText = data.city || data.locality;
-                        // For temperature, you'd usually use OpenWeather, using a demo temp here:
-                        document.getElementById('temp').innerText = "32°C"; 
-                    });
-                }, () => {
-                    document.getElementById('city').innerText = "Location Blocked";
-                });
-            }
-        }
-        getWeather();
-
-        // 5. Balance Controls
+        // --- 3. Balance Controls ---
         function setBalance() {
-            let val = document.getElementById('initBalance').value;
+            const val = document.getElementById('initBalance').value;
             if(val !== "" && val >= 0) {
                 balance = parseFloat(val);
                 updateUI();
@@ -159,18 +178,15 @@
             }
         }
 
-        // 6. Task Scheduling & Notification
+        // --- 4. Scheduling & Notifications ---
         function scheduleTask() {
             const amt = parseFloat(document.getElementById('expAmount').value);
             const cat = document.getElementById('expCategory').value;
             const date = document.getElementById('expDate').value;
 
-            if(!amt || !date) {
-                alert("Please input amount and date/time!");
-                return;
-            }
+            if(!amt || !date) return alert("All fields are required!");
 
-            const newTask = {
+            tasks.push({
                 id: Date.now(),
                 amount: amt,
                 category: cat,
@@ -178,11 +194,8 @@
                 displayTime: new Date(date).toLocaleString(),
                 notified: false,
                 status: 'pending'
-            };
-
-            tasks.push(newTask);
+            });
             updateUI();
-            
             document.getElementById('expAmount').value = "";
             document.getElementById('expDate').value = "";
         }
@@ -190,23 +203,22 @@
         function renderTasks() {
             const list = document.getElementById('pendingList');
             const pending = tasks.filter(t => t.status === 'pending');
-            
             if(pending.length === 0) {
-                list.innerHTML = `<p class="text-slate-400 text-sm italic">No upcoming tasks found.</p>`;
+                list.innerHTML = `<p class="text-slate-400 text-sm italic py-4">No pending reminders.</p>`;
                 return;
             }
-
             list.innerHTML = "";
             pending.forEach(t => {
+                const isDue = new Date().getTime() >= t.targetTime;
                 list.innerHTML += `
-                    <div class="flex justify-between items-center bg-slate-50 p-4 rounded-2xl border-l-4 ${new Date().getTime() >= t.targetTime ? 'border-orange-500 animate-pulse' : 'border-indigo-400'}">
+                    <div class="flex justify-between items-center bg-slate-50 p-4 rounded-2xl border-l-4 ${isDue ? 'border-rose-500 animate-pulse' : 'border-indigo-400'}">
                         <div>
-                            <p class="font-bold text-slate-800">${t.category}</p>
+                            <p class="font-bold text-slate-700">${t.category}</p>
                             <p class="text-[9px] text-slate-400 font-bold uppercase">${t.displayTime}</p>
                         </div>
                         <div class="flex items-center gap-3">
-                            <span class="font-black text-rose-600">৳${t.amount}</span>
-                            <button onclick="confirmExpense(${t.id})" class="bg-indigo-600 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-green-500 shadow-md transition">
+                            <span class="font-black text-rose-500">৳${t.amount}</span>
+                            <button onclick="approveTask(${t.id})" class="bg-indigo-600 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-green-500 transition shadow-lg">
                                 <i class="fas fa-check"></i>
                             </button>
                         </div>
@@ -215,15 +227,11 @@
             });
         }
 
-        function checkReminders(now) {
-            const cur = now.getTime();
+        function checkReminders(currentTime) {
             tasks.forEach(t => {
-                if(t.status === 'pending' && !t.notified && cur >= t.targetTime) {
+                if(t.status === 'pending' && !t.notified && currentTime >= t.targetTime) {
                     if(Notification.permission === "granted") {
-                        new Notification("Manager: Task Due!", {
-                            body: `Time to pay ৳${t.amount} for ${t.category}. Click check to deduct.`,
-                            icon: "https://cdn-icons-png.flaticon.com/512/1827/1827347.png"
-                        });
+                        new Notification("MANAGER REMINDER", { body: `Time for ${t.category}: ৳${t.amount}`, icon: "https://cdn-icons-png.flaticon.com/512/1827/1827347.png" });
                     }
                     t.notified = true;
                     updateUI();
@@ -231,23 +239,66 @@
             });
         }
 
-        function confirmExpense(id) {
+        function approveTask(id) {
             const idx = tasks.findIndex(t => t.id === id);
-            const task = tasks[idx];
-
-            if(balance >= task.amount) {
-                balance -= task.amount;
-                task.status = 'completed';
+            const t = tasks[idx];
+            if(balance >= t.amount) {
+                balance -= t.amount;
+                t.status = 'completed';
                 updateUI();
-                alert(`Successfully reduced ৳${task.amount} from balance.`);
             } else {
-                alert("Error: Low Balance!");
+                alert("Low Balance!");
             }
         }
 
-        // Initialize UI
-        updateUI();
+        // --- 5. Routine Controls ---
+        function toggleRoutine() { document.getElementById('routineModal').classList.toggle('hidden'); }
 
+        function addRoutine() {
+            const sub = document.getElementById('subject').value;
+            const time = document.getElementById('classTime').value;
+            const day = document.getElementById('day').value;
+            if(!sub || !time) return;
+            routines.push({ id: Date.now(), sub, time, day });
+            updateUI();
+            document.getElementById('subject').value = "";
+        }
+
+        function renderRoutine() {
+            const box = document.getElementById('routineTable');
+            box.innerHTML = routines.length === 0 ? "<p class='text-center text-slate-400 text-xs py-4'>No routine added.</p>" : "";
+            routines.forEach(r => {
+                box.innerHTML += `
+                    <div class="flex justify-between items-center bg-blue-50 p-3 rounded-2xl border border-blue-100">
+                        <div><p class="font-bold text-blue-800 text-sm">${r.sub}</p><p class="text-[9px] text-blue-400 font-bold uppercase">${r.day} at ${r.time}</p></div>
+                        <button onclick="deleteRoutine(${r.id})" class="text-rose-300 hover:text-rose-500 transition"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                `;
+            });
+        }
+
+        function deleteRoutine(id) {
+            routines = routines.filter(r => r.id !== id);
+            updateUI();
+        }
+
+        // --- 6. Statement Download (PDF) ---
+        function downloadStatement() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFontSize(22); doc.setTextColor(79, 70, 229); doc.text("MANAGER EXPENSE REPORT", 14, 20);
+            doc.setFontSize(10); doc.setTextColor(100); doc.text(`Date: ${new Date().toLocaleString()} | Balance: TK ${balance.toFixed(2)}`, 14, 28);
+            
+            const rows = tasks.filter(t => t.status === 'completed').map(t => [t.category, t.displayTime, `TK ${t.amount.toFixed(2)}`]);
+            
+            doc.autoTable({
+                startY: 35, head: [['CATEGORY', 'DATE & TIME', 'AMOUNT']], body: rows,
+                theme: 'grid', headStyles: { fillColor: [79, 70, 229] }, styles: { fontSize: 9 }
+            });
+            doc.save(`Manager_Statement_${Date.now()}.pdf`);
+        }
+
+        init();
     </script>
 </body>
 </html>
