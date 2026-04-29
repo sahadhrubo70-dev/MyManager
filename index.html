@@ -3,150 +3,242 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manager - Personal Assistant</title>
+    <title>Manager - Personal Smart Assistant</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); }
+    </style>
 </head>
-<body class="bg-gray-50 font-sans">
+<body class="bg-slate-50 text-slate-900 min-h-screen">
 
-    <nav class="bg-indigo-700 p-4 text-white shadow-lg flex justify-between items-center px-6 md:px-12">
+    <nav class="bg-indigo-700 text-white p-4 shadow-xl flex justify-between items-center px-6 sticky top-0 z-50">
         <div class="flex items-center gap-2">
-            <i class="fas fa-user-tie text-2xl"></i>
-            <h1 class="text-xl font-bold tracking-wider uppercase">Manager</h1>
+            <i class="fas fa-user-shield text-2xl"></i>
+            <h1 class="text-xl font-bold tracking-tighter uppercase italic">Manager</h1>
         </div>
         <div class="text-right">
-            <p id="live-date" class="text-xs opacity-80"></p>
+            <p id="live-date" class="text-[10px] uppercase tracking-widest opacity-70"></p>
             <p id="live-time" class="text-lg font-mono font-bold"></p>
         </div>
     </nav>
 
-    <div class="max-w-6xl mx-auto p-4 md:p-8">
+    <div class="max-w-6xl mx-auto p-4 md:p-8 space-y-8">
         
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-2xl shadow-sm border-b-4 border-indigo-500">
-                <h3 class="text-gray-500 text-sm font-bold uppercase mb-2">Main Balance</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
+                <h3 class="text-slate-400 text-xs font-bold uppercase mb-2">Total Wallet Balance</h3>
                 <div class="flex items-center gap-2 mb-4">
-                    <input type="number" id="initBalance" placeholder="Enter Amount" class="w-full border p-2 rounded-lg outline-none focus:ring-2 focus:ring-indigo-400">
-                    <button onclick="setBalance()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-800 transition">Set</button>
+                    <input type="number" id="initBalance" placeholder="Set Balance" class="w-full border border-slate-200 p-2 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                    <button onclick="setBalance()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-700 transition font-bold">Set</button>
                 </div>
-                <p class="text-3xl font-black text-gray-800">৳ <span id="displayBalance">0.00</span></p>
+                <p class="text-4xl font-black text-slate-800">৳ <span id="displayBalance">0.00</span></p>
             </div>
 
-            <div class="bg-white p-6 rounded-2xl shadow-sm border-b-4 border-orange-400">
-                <h3 class="text-gray-500 text-sm font-bold uppercase mb-2">Current Weather</h3>
-                <div id="weather-box" class="flex items-center gap-4">
-                    <i class="fas fa-cloud-sun text-4xl text-orange-400"></i>
-                    <div>
-                        <p class="text-2xl font-bold">32°C</p>
-                        <p class="text-gray-400 text-sm italic">Dhaka, Bangladesh</p>
-                    </div>
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
+                <div>
+                    <h3 class="text-slate-400 text-xs font-bold uppercase mb-1">Weather Update</h3>
+                    <p class="text-2xl font-black">29°C</p>
+                    <p class="text-slate-400 text-xs italic">Clear Sky, Khulna</p>
                 </div>
+                <i class="fas fa-sun text-4xl text-yellow-400 animate-pulse"></i>
             </div>
 
-            <div class="bg-indigo-900 p-6 rounded-2xl shadow-sm text-white flex flex-col justify-center items-center">
-                <i class="fas fa-bell text-2xl mb-2 animate-bounce"></i>
-                <p class="text-center text-sm">No reminders for today!</p>
-                <button class="mt-2 text-xs bg-white text-indigo-900 px-3 py-1 rounded-full font-bold">Set Reminder</button>
+            <div class="bg-indigo-900 p-6 rounded-3xl shadow-sm text-white flex flex-col justify-center relative overflow-hidden">
+                <div class="z-10">
+                    <h3 class="text-indigo-300 text-xs font-bold uppercase mb-1">Notifications</h3>
+                    <p id="notif-count" class="text-sm font-medium">System Active & Monitoring</p>
+                </div>
+                <i class="fas fa-bell text-6xl absolute -right-2 -bottom-2 opacity-10 rotate-12"></i>
             </div>
         </div>
 
-        <div class="bg-white p-6 rounded-2xl shadow-md border border-gray-100 mb-8">
-            <h2 class="text-lg font-bold mb-4 flex items-center gap-2 text-rose-600">
-                <i class="fas fa-wallet"></i> Quick Expense Tracker
+        <div class="bg-white p-6 rounded-3xl shadow-md border border-slate-100">
+            <h2 class="text-lg font-bold mb-6 flex items-center gap-2 text-rose-600">
+                <i class="fas fa-calendar-plus"></i> Schedule New Expense
             </h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <select id="expCategory" class="border p-3 rounded-xl outline-none focus:ring-2 focus:ring-rose-400 bg-gray-50">
-                    <option value="House Rent">House/Mess/Hostel Rent</option>
-                    <option value="Market">Monthly Market</option>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <select id="expCategory" class="border border-slate-200 p-3 rounded-2xl outline-none focus:ring-2 focus:ring-rose-400 bg-slate-50">
+                    <option value="House Rent">House/Mess Rent</option>
+                    <option value="Monthly Market">Monthly Market</option>
                     <option value="Loan EMI">Loan EMI</option>
-                    <option value="Mobile">Mobile Recharge</option>
-                    <option value="Utility Bills">Utility Bills (Current/Gas/Water)</option>
+                    <option value="Mobile Recharge">Mobile Recharge</option>
+                    <option value="Utility Bills">Bills (Current/Gas/Water)</option>
                     <option value="Transport">Transport</option>
-                    <option value="Extra">Extra/Others</option>
+                    <option value="Extra Cost">Extra Cost</option>
                 </select>
-                <input type="number" id="expAmount" placeholder="Amount to spend" class="border p-3 rounded-xl outline-none focus:ring-2 focus:ring-rose-400 bg-gray-50">
-                <button onclick="deductExpense()" class="bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-rose-200 uppercase tracking-widest">Reduce Balance</button>
+                <input type="number" id="expAmount" placeholder="Amount (৳)" class="border border-slate-200 p-3 rounded-2xl outline-none focus:ring-2 focus:ring-rose-400 bg-slate-50">
+                <input type="datetime-local" id="expDate" class="border border-slate-200 p-3 rounded-2xl outline-none focus:ring-2 focus:ring-rose-400 bg-slate-50 text-sm">
+                <button onclick="scheduleExpense()" class="bg-rose-500 hover:bg-rose-600 text-white font-bold py-3 rounded-2xl transition shadow-lg shadow-rose-100 uppercase tracking-tighter">Schedule Task</button>
             </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div class="bg-blue-50 p-6 rounded-2xl border-2 border-dashed border-blue-200">
-                <h2 class="text-blue-700 font-black text-xl mb-4 flex items-center gap-2">
-                    <i class="fas fa-graduation-cap"></i> Student Section
+            <div class="bg-white p-6 rounded-3xl shadow-md border border-slate-100">
+                <h2 class="text-lg font-bold mb-4 text-amber-600 flex items-center gap-2">
+                    <i class="fas fa-clock"></i> Upcoming Reminders
                 </h2>
-                <div class="space-y-3">
-                    <button class="w-full bg-white p-3 rounded-xl shadow-sm hover:shadow-md transition text-left flex justify-between items-center text-blue-800 font-semibold">
-                        Class Routine & Schedule <i class="fas fa-chevron-right text-xs"></i>
-                    </button>
-                    <button class="w-full bg-white p-3 rounded-xl shadow-sm hover:shadow-md transition text-left flex justify-between items-center text-blue-800 font-semibold">
-                        Assignment Cover Page Maker <i class="fas fa-plus-circle text-xs"></i>
-                    </button>
+                <div id="pendingList" class="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                    <p class="text-slate-400 text-sm italic">No pending tasks or expenses.</p>
                 </div>
             </div>
 
-            <div class="bg-emerald-50 p-6 rounded-2xl border-2 border-dashed border-emerald-200">
-                <h2 class="text-emerald-700 font-black text-xl mb-4 flex items-center gap-2">
-                    <i class="fas fa-briefcase"></i> Professional Section
-                </h2>
-                <div class="space-y-3">
-                    <button class="w-full bg-white p-3 rounded-xl shadow-sm hover:shadow-md transition text-left flex justify-between items-center text-emerald-800 font-semibold">
-                        Work Schedule & Tasks <i class="fas fa-calendar-alt text-xs"></i>
-                    </button>
-                    <button class="w-full bg-white p-3 rounded-xl shadow-sm hover:shadow-md transition text-left flex justify-between items-center text-emerald-800 font-semibold">
-                        Download Monthly Statement <i class="fas fa-file-download text-xs"></i>
-                    </button>
+            <div class="space-y-6">
+                <div class="bg-blue-600 p-6 rounded-3xl text-white shadow-lg relative overflow-hidden">
+                    <h2 class="font-black text-xl mb-4 flex items-center gap-2">
+                        <i class="fas fa-user-graduate"></i> Student Portal
+                    </h2>
+                    <div class="grid grid-cols-2 gap-3 relative z-10">
+                        <button class="bg-blue-500/50 hover:bg-white hover:text-blue-600 p-3 rounded-2xl text-xs font-bold transition">Class Routine</button>
+                        <button onclick="window.location.href='student-tool.html'" class="bg-blue-500/50 hover:bg-white hover:text-blue-600 p-3 rounded-2xl text-xs font-bold transition">Cover Page Maker</button>
+                    </div>
+                </div>
+                <div class="bg-emerald-600 p-6 rounded-3xl text-white shadow-lg relative overflow-hidden">
+                    <h2 class="font-black text-xl mb-4 flex items-center gap-2">
+                        <i class="fas fa-briefcase"></i> Pro Portal
+                    </h2>
+                    <div class="grid grid-cols-2 gap-3 relative z-10">
+                        <button class="bg-emerald-500/50 hover:bg-white hover:text-emerald-600 p-3 rounded-2xl text-xs font-bold transition">Work Schedule</button>
+                        <button class="bg-emerald-500/50 hover:bg-white hover:text-emerald-600 p-3 rounded-2xl text-xs font-bold transition">Get Statement</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Live Date & Time Function
+        // 1. Initial State & Setup
+        let balance = parseFloat(localStorage.getItem('manager_balance')) || 0;
+        let scheduledTasks = JSON.parse(localStorage.getItem('manager_tasks')) || [];
+
+        // Notification Permission
+        if (Notification.permission !== "granted") {
+            Notification.requestPermission();
+        }
+
         function updateClock() {
             const now = new Date();
             document.getElementById('live-date').innerText = now.toDateString();
             document.getElementById('live-time').innerText = now.toLocaleTimeString();
+            checkSchedules(now);
         }
         setInterval(updateClock, 1000);
-        updateClock();
-
-        // Expense Logic
-        let balance = 0;
-
-        function setBalance() {
-            let input = document.getElementById('initBalance').value;
-            if (input === "" || input < 0) {
-                alert("Please enter a valid balance!");
-                return;
-            }
-            balance = parseFloat(input);
-            updateUI();
-            document.getElementById('initBalance').value = "";
-        }
-
-        function deductExpense() {
-            let amount = document.getElementById('expAmount').value;
-            let category = document.getElementById('expCategory').value;
-
-            if (amount === "" || amount <= 0) {
-                alert("Enter a valid expense amount!");
-                return;
-            }
-
-            if (parseFloat(amount) > balance) {
-                alert("Insufficient Balance! Slow down on spending.");
-                return;
-            }
-
-            balance -= parseFloat(amount);
-            updateUI();
-            alert("৳" + amount + " deducted for " + category);
-            document.getElementById('expAmount').value = "";
-        }
-
+        
         function updateUI() {
             document.getElementById('displayBalance').innerText = balance.toLocaleString('en-IN', {minimumFractionDigits: 2});
+            renderTasks();
+            localStorage.setItem('manager_balance', balance);
+            localStorage.setItem('manager_tasks', JSON.stringify(scheduledTasks));
         }
+
+        // 2. Balance Functions
+        function setBalance() {
+            const val = document.getElementById('initBalance').value;
+            if (val >= 0 && val !== "") {
+                balance = parseFloat(val);
+                updateUI();
+                document.getElementById('initBalance').value = "";
+            }
+        }
+
+        // 3. Scheduling Logic
+        function scheduleExpense() {
+            const amount = parseFloat(document.getElementById('expAmount').value);
+            const category = document.getElementById('expCategory').value;
+            const date = document.getElementById('expDate').value;
+
+            if (!amount || !date) {
+                alert("Please provide amount and date/time!");
+                return;
+            }
+
+            const task = {
+                id: Date.now(),
+                amount,
+                category,
+                time: new Date(date).getTime(),
+                readableTime: new Date(date).toLocaleString(),
+                status: 'pending',
+                notified: false
+            };
+
+            scheduledTasks.push(task);
+            updateUI();
+            
+            // Clear inputs
+            document.getElementById('expAmount').value = "";
+            document.getElementById('expDate').value = "";
+        }
+
+        function renderTasks() {
+            const list = document.getElementById('pendingList');
+            if (scheduledTasks.filter(t => t.status === 'pending').length === 0) {
+                list.innerHTML = `<p class="text-slate-400 text-sm italic">No pending tasks or expenses.</p>`;
+                return;
+            }
+
+            list.innerHTML = "";
+            scheduledTasks.forEach(task => {
+                if (task.status === 'pending') {
+                    list.innerHTML += `
+                        <div class="flex justify-between items-center bg-slate-50 p-4 rounded-2xl border border-slate-100 hover:border-indigo-300 transition group">
+                            <div>
+                                <p class="font-bold text-slate-700">${task.category}</p>
+                                <p class="text-[10px] text-slate-400 uppercase font-bold tracking-tighter">${task.readableTime}</p>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="font-black text-rose-500">৳${task.amount}</span>
+                                <button onclick="approveTask(${task.id})" class="bg-indigo-600 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-green-500 transition shadow-lg">
+                                    <i class="fas fa-check text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        // 4. Approval & Notification Logic
+        function approveTask(id) {
+            const idx = scheduledTasks.findIndex(t => t.id === id);
+            const task = scheduledTasks[idx];
+
+            if (balance >= task.amount) {
+                balance -= task.amount;
+                task.status = 'completed';
+                updateUI();
+                alert(`Successfully reduced ৳${task.amount} for ${task.category}`);
+            } else {
+                alert("Error: Insufficient main balance!");
+            }
+        }
+
+        function checkSchedules(now) {
+            const currentTime = now.getTime();
+            scheduledTasks.forEach(task => {
+                if (task.status === 'pending' && !task.notified && currentTime >= task.time) {
+                    sendNotification(task);
+                    task.notified = true;
+                    updateUI();
+                }
+            });
+        }
+
+        function sendNotification(task) {
+            if (Notification.permission === "granted") {
+                new Notification("MANAGER: Task Due!", {
+                    body: `Time to pay ৳${task.amount} for ${task.category}. Check your dashboard.`,
+                    icon: "https://cdn-icons-png.flaticon.com/512/2343/2343513.png"
+                });
+            }
+            // Fallback alert for mobile/inactive tabs
+            console.log(`Alert: ${task.category} is due!`);
+        }
+
+        // Run UI update on load
+        updateUI();
     </script>
 </body>
 </html>
