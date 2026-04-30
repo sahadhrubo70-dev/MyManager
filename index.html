@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manager Pro - Final Version</title>
+    <title>Manager Pro - Advanced Student & Pro Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
@@ -51,9 +53,9 @@
             </div>
         </nav>
 
-        <!-- Weather Bar -->
+        <!-- Weather & Date Bar -->
         <div class="bg-white border-b px-6 py-3 flex justify-between items-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-            <div id="weatherInfo">Loading Weather...</div>
+            <div id="weatherInfo"><i class="fas fa-location-arrow mr-1"></i> Detecting Location...</div>
             <div id="dateTimeInfo"></div>
         </div>
 
@@ -62,6 +64,7 @@
             <!-- DASHBOARD TAB -->
             <div id="expenseTab" class="space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Balance -->
                     <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
                         <p class="text-slate-400 text-[10px] font-bold uppercase mb-2">Current Balance</p>
                         <h2 class="text-4xl font-black text-slate-800 mb-6">৳ <span id="mainBal">0.00</span></h2>
@@ -71,7 +74,7 @@
                         </div>
                     </div>
 
-                    <!-- Quick Expense with Date -->
+                    <!-- Quick Expense -->
                     <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
                         <p class="text-slate-400 text-[10px] font-bold uppercase mb-4">Add Quick Expense</p>
                         <div class="grid grid-cols-2 gap-3 mb-3">
@@ -86,19 +89,20 @@
                     </div>
                 </div>
 
-                <!-- Important Note & Lists -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <!-- Important Note Section -->
-                    <div class="bg-indigo-50 p-6 rounded-[2rem] border border-indigo-100">
+                    <!-- Important Notes -->
+                    <div class="bg-indigo-50 p-6 rounded-[2rem] border border-indigo-100 shadow-sm">
                         <h3 class="text-xs font-black uppercase text-indigo-600 mb-3 italic">Important Notes</h3>
-                        <textarea id="importantNote" oninput="saveNote()" class="w-full h-32 bg-transparent border-none outline-none text-sm text-indigo-900 placeholder-indigo-300" placeholder="Write your important information here..."></textarea>
+                        <textarea id="importantNote" oninput="saveNote()" class="w-full h-32 bg-transparent border-none outline-none text-sm text-indigo-900 placeholder-indigo-300" placeholder="Write your information here..."></textarea>
                     </div>
-                    <div class="bg-white p-6 rounded-[2rem] shadow-sm overflow-hidden">
+                    <!-- Reminders -->
+                    <div class="bg-white p-6 rounded-[2rem] shadow-sm">
                         <h3 class="text-xs font-black uppercase text-orange-500 mb-4 tracking-widest">Pending (Reminders)</h3>
                         <div id="reminderList" class="space-y-3"></div>
                     </div>
-                    <div class="bg-white p-6 rounded-[2rem] shadow-sm overflow-hidden">
-                        <h3 class="text-xs font-black uppercase text-slate-400 mb-4 tracking-widest">Recent Transactions</h3>
+                    <!-- Transactions (Auto-cleanup logic) -->
+                    <div class="bg-white p-6 rounded-[2rem] shadow-sm">
+                        <h3 class="text-xs font-black uppercase text-slate-400 mb-4 tracking-widest">Recent (Last 30 Days)</h3>
                         <div id="transList" class="space-y-3"></div>
                     </div>
                 </div>
@@ -111,46 +115,86 @@
         </div>
     </div>
 
-    <!-- ROUTINE MODAL -->
+    <!-- MODALS -->
+    <!-- Routine Modal -->
     <div id="routineModal" class="fixed inset-0 bg-black/60 hidden z-[200] flex items-center justify-center p-4">
         <div class="bg-white w-full max-w-lg rounded-[2.5rem] p-8 overflow-y-auto max-h-[90vh]">
-            <h2 class="text-xl font-black mb-6 italic text-indigo-600 uppercase">Class Routine Manager</h2>
+            <h2 class="text-xl font-black mb-6 text-indigo-600 uppercase italic">Routine Manager</h2>
             <div class="space-y-3 mb-6 bg-slate-50 p-4 rounded-2xl">
                 <input type="text" id="rtCourse" placeholder="Course Name" class="w-full p-3 rounded-xl border">
                 <input type="text" id="rtCode" placeholder="Course Code" class="w-full p-3 rounded-xl border">
                 <input type="text" id="rtTeacher" placeholder="Teacher Name" class="w-full p-3 rounded-xl border">
                 <div class="flex gap-2">
-                    <select id="rtDay" class="flex-1 p-3 rounded-xl border">
+                    <select id="rtDay" class="flex-1 p-3 rounded-xl border font-bold">
                         <option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
                     </select>
-                    <input type="time" id="rtTime" class="flex-1 p-3 rounded-xl border">
+                    <input type="time" id="rtTime" class="flex-1 p-3 rounded-xl border font-bold">
                 </div>
-                <button onclick="addRoutine()" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-black">SAVE TO ROUTINE</button>
+                <button onclick="addRoutine()" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-black">SAVE CLASS</button>
             </div>
             <div id="routineDisplay" class="space-y-2"></div>
-            <button onclick="closeModal('routineModal')" class="w-full mt-4 text-slate-400 font-bold text-xs uppercase">Close</button>
+            <button onclick="closeModal('routineModal')" class="w-full mt-4 text-slate-300 font-bold text-[10px] uppercase">Close</button>
+        </div>
+    </div>
+
+    <!-- GPA Modal -->
+    <div id="gpaModal" class="fixed inset-0 bg-black/60 hidden z-[200] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8">
+            <h2 class="text-xl font-black mb-6 text-blue-600 uppercase italic">GPA Calculator</h2>
+            <div id="gpaFields" class="space-y-2 mb-4 max-h-60 overflow-y-auto pr-2">
+                <div class="flex gap-2"><input type="number" step="0.01" class="gpa-input w-full p-3 rounded-xl border" placeholder="GP"></div>
+            </div>
+            <button onclick="addGpaField()" class="text-xs font-bold text-blue-500 mb-4">+ Add Subject</button>
+            <button onclick="calcGPA()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black">CALCULATE</button>
+            <div id="gpaResult" class="text-center mt-4 text-3xl font-black text-slate-700"></div>
+            <button onclick="closeModal('gpaModal')" class="w-full mt-4 text-slate-300 font-bold text-[10px] uppercase">Close</button>
+        </div>
+    </div>
+
+    <!-- Cover Modal -->
+    <div id="coverModal" class="fixed inset-0 bg-black/60 hidden z-[200] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-[2.5rem] p-8">
+            <h2 class="text-xl font-black mb-6 text-purple-600 uppercase italic">Cover & Index</h2>
+            <div class="space-y-3">
+                <input type="text" id="cvInst" placeholder="Institution Name" class="w-full p-3 rounded-xl border">
+                <input type="text" id="cvTopic" placeholder="Assignment Topic" class="w-full p-3 rounded-xl border">
+                <input type="text" id="cvName" placeholder="Your Name" class="w-full p-3 rounded-xl border">
+                <textarea id="cvIndex" placeholder="Index Topics (Comma separated)" class="w-full p-3 rounded-xl border h-20"></textarea>
+                <div class="flex gap-2">
+                    <button onclick="genPDF('cover')" class="flex-1 bg-indigo-500 text-white py-3 rounded-xl font-black text-xs">GEN COVER</button>
+                    <button onclick="genPDF('index')" class="flex-1 bg-purple-500 text-white py-3 rounded-xl font-black text-xs">GEN INDEX</button>
+                </div>
+            </div>
+            <button onclick="closeModal('coverModal')" class="w-full mt-4 text-slate-300 font-bold text-[10px] uppercase">Close</button>
         </div>
     </div>
 
     <script>
-        let isLogin = true;
         let balance = parseFloat(localStorage.getItem('m_bal')) || 0;
         let expenses = JSON.parse(localStorage.getItem('m_expenses')) || [];
         let reminders = JSON.parse(localStorage.getItem('m_reminders')) || [];
         let routines = JSON.parse(localStorage.getItem('m_routines')) || [];
         let userRole = "";
 
+        // NOTIFICATION PERMISSION
+        function requestNotify() {
+            if ("Notification" in window) {
+                Notification.requestPermission();
+            }
+        }
+
         // AUTH
         function toggleAuthMode() {
-            isLogin = !isLogin;
             document.getElementById('regFields').classList.toggle('hidden-section');
-            document.getElementById('authBtn').innerText = isLogin ? "LOGIN" : "SIGN UP";
+            document.getElementById('authBtn').innerText = document.getElementById('regFields').classList.contains('hidden-section') ? "LOGIN" : "SIGN UP";
         }
 
         function handleAuth() {
             const u = document.getElementById('username').value;
             const p = document.getElementById('password').value;
-            if(!isLogin) {
+            const isReg = !document.getElementById('regFields').classList.contains('hidden-section');
+            
+            if(isReg) {
                 const n = document.getElementById('fullName').value;
                 const r = document.getElementById('userRole').value;
                 localStorage.setItem(`u_${u}`, JSON.stringify({name: n, pass: p, role: r}));
@@ -159,8 +203,9 @@
                 const data = JSON.parse(localStorage.getItem(`u_${u}`));
                 if(data && data.pass === p) {
                     localStorage.setItem('active_user', u);
+                    requestNotify();
                     startApp(data);
-                } else alert("Error");
+                } else alert("Invalid Login");
             }
         }
 
@@ -171,28 +216,75 @@
             document.getElementById('displayUserName').innerText = `${data.name} (${data.role})`;
             document.getElementById('portalTitle').innerText = userRole === 'student' ? "STUDENT PORTAL" : "PROFESSION PORTAL";
             document.getElementById('importantNote').value = localStorage.getItem('m_note') || "";
-            renderPortal(); renderUI(); startWeather(); checkNotifications();
+            
+            autoCleanupTransactions();
+            renderPortal(); renderUI(); startWeather(); startTime(); startNotificationEngine();
         }
 
-        // WEATHER
+        // WEATHER & TIME
         function startWeather() {
-            const now = new Date();
-            document.getElementById('dateTimeInfo').innerText = `${now.toLocaleDateString()} | ${now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}`;
-            document.getElementById('weatherInfo').innerText = "Temp: 32°C | Khulna, Bangladesh";
+            navigator.geolocation.getCurrentPosition(pos => {
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
+                fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`)
+                    .then(res => res.json())
+                    .then(d => {
+                        document.getElementById('weatherInfo').innerHTML = `<i class="fas fa-sun mr-1 text-yellow-500"></i> ${d.current_weather.temperature}°C | Khulna, Bangladesh`;
+                    });
+            });
         }
 
-        // NOTES
-        function saveNote() {
-            localStorage.setItem('m_note', document.getElementById('importantNote').value);
+        function startTime() {
+            setInterval(() => {
+                const now = new Date();
+                const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+                document.getElementById('dateTimeInfo').innerText = `${days[now.getDay()]} | ${now.toLocaleDateString()} | ${now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+            }, 1000);
         }
 
-        // EXPENSES & REMINDERS
+        // NOTIFICATION ENGINE (Runs every 30 seconds)
+        function startNotificationEngine() {
+            setInterval(() => {
+                const now = new Date();
+                const day = now.toLocaleString('en-US', {weekday: 'long'});
+                const currentTime = now.getHours() * 60 + now.getMinutes();
+
+                routines.forEach(r => {
+                    if(r.day === day) {
+                        const [h, m] = r.time.split(':');
+                        const classTime = parseInt(h) * 60 + parseInt(m);
+                        const diff = classTime - currentTime;
+
+                        if(diff === 45) {
+                            new Notification("Manager Pro", {
+                                body: `Class Alert: "${r.course}" starts in 45 minutes!`,
+                                icon: "https://cdn-icons-png.flaticon.com/512/3587/3587094.png"
+                            });
+                        }
+                    }
+                });
+            }, 30000);
+        }
+
+        // TRANSACTIONS CLEANUP (Remove > 30 Days)
+        function autoCleanupTransactions() {
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+            expenses = expenses.filter(e => {
+                const eDate = new Date(e.date);
+                return eDate >= thirtyDaysAgo;
+            });
+            localStorage.setItem('m_expenses', JSON.stringify(expenses));
+        }
+
+        // EXPENSES
         function addToReminder() {
             const cat = document.getElementById('expCategory').value;
             const amt = parseFloat(document.getElementById('expAmount').value);
             const date = document.getElementById('expDate').value;
             const note = document.getElementById('expNote').value;
-            if(!amt || !date) return alert("Fill all fields");
+            if(!amt || !date) return alert("Fill Amount and Date");
 
             reminders.push({ id: Date.now(), cat, amt, date, note });
             localStorage.setItem('m_reminders', JSON.stringify(reminders));
@@ -202,66 +294,60 @@
         function payDone(id) {
             const idx = reminders.findIndex(r => r.id === id);
             const item = reminders[idx];
-            if(item.amt > balance) return alert("Low Balance");
+            if(item.amt > balance) return alert("Insufficient Balance");
+            
             balance -= item.amt;
-            expenses.unshift({...item, payDate: new Date().toLocaleDateString()});
+            expenses.unshift({...item, date: new Date().toISOString()}); // Save ISO date for cleanup
             reminders.splice(idx, 1);
+            
             localStorage.setItem('m_bal', balance);
-            localStorage.setItem('m_reminders', JSON.stringify(reminders));
             localStorage.setItem('m_expenses', JSON.stringify(expenses));
+            localStorage.setItem('m_reminders', JSON.stringify(reminders));
             renderUI();
         }
 
-        // ROUTINE & NOTIFICATION
-        function addRoutine() {
-            const course = document.getElementById('rtCourse').value;
-            const code = document.getElementById('rtCode').value;
-            const teacher = document.getElementById('rtTeacher').value;
-            const day = document.getElementById('rtDay').value;
-            const time = document.getElementById('rtTime').value;
-            if(!course || !time) return;
-
-            routines.push({ course, code, teacher, day, time });
-            localStorage.setItem('m_routines', JSON.stringify(routines));
-            renderRoutineList();
+        // TOOLS: GPA & COVER
+        function addGpaField() {
+            document.getElementById('gpaFields').insertAdjacentHTML('beforeend', '<input type="number" step="0.01" class="gpa-input w-full p-3 rounded-xl border mt-2" placeholder="GP">');
+        }
+        function calcGPA() {
+            const inputs = document.querySelectorAll('.gpa-input');
+            let sum = 0, count = 0;
+            inputs.forEach(i => { if(i.value) { sum += parseFloat(i.value); count++; } });
+            document.getElementById('gpaResult').innerText = count > 0 ? (sum/count).toFixed(2) : "0.00";
         }
 
-        function checkNotifications() {
-            setInterval(() => {
-                const now = new Date();
-                const currentDay = now.toLocaleString('en-us', {weekday: 'long'});
-                const currentTime = now.getHours() * 60 + now.getMinutes();
+        function genPDF(type) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const inst = document.getElementById('cvInst').value;
+            const topic = document.getElementById('cvTopic').value;
+            const name = document.getElementById('cvName').value;
 
-                routines.forEach(r => {
-                    const [h, m] = r.time.split(':');
-                    const classTime = parseInt(h) * 60 + parseInt(m);
-                    if(r.day === currentDay && (classTime - currentTime) === 45) {
-                        alert(`NOTIFICATION: Your class "${r.course}" starts in 45 minutes!`);
-                    }
-                });
-            }, 60000);
+            if(type === 'cover') {
+                doc.setFontSize(22); doc.text(inst.toUpperCase(), 105, 50, null, null, "center");
+                doc.setFontSize(14); doc.text("ASSIGNMENT ON", 105, 100, null, null, "center");
+                doc.setFontSize(18); doc.text(topic, 105, 115, null, null, "center");
+                doc.setFontSize(12); doc.text("Submitted By: " + name, 105, 200, null, null, "center");
+            } else {
+                const items = document.getElementById('cvIndex').value.split(',').map((t, i) => [i+1, t.trim(), '___']);
+                doc.text("INDEX / TABLE OF CONTENTS", 105, 30, null, null, "center");
+                doc.autoTable({ startY: 45, head: [['#', 'Topic', 'Page']], body: items });
+            }
+            doc.save(`${type}.pdf`);
         }
 
-        // UI RENDER
+        // UI
         function renderUI() {
             document.getElementById('mainBal').innerText = balance.toLocaleString();
             document.getElementById('reminderList').innerHTML = reminders.map(r => `
-                <div class="bg-orange-50 p-3 rounded-xl border border-orange-100 flex justify-between items-center">
-                    <div class="text-[10px] font-bold">
-                        <span class="text-orange-600">${r.cat}</span><br>
-                        <span class="text-slate-400">${r.date} | ${r.note}</span>
-                    </div>
-                    <div class="text-right">
-                        <p class="font-black text-sm">৳${r.amt}</p>
-                        <button onclick="payDone(${r.id})" class="bg-orange-500 text-white px-2 py-1 rounded text-[8px] font-black uppercase">Pay Done</button>
-                    </div>
+                <div class="bg-orange-50 p-3 rounded-xl flex justify-between items-center border border-orange-100">
+                    <div class="text-[10px] font-bold"><span class="text-orange-600">${r.cat}</span><br>${r.date}</div>
+                    <div class="text-right"><p class="text-xs font-black">৳${r.amt}</p><button onclick="payDone(${r.id})" class="bg-orange-500 text-white px-2 py-1 rounded text-[8px] font-black">PAY DONE</button></div>
                 </div>
             `).join('');
             document.getElementById('transList').innerHTML = expenses.map(e => `
-                <div class="border-b pb-2 flex justify-between items-center">
-                    <div class="text-[9px] font-bold"><span>${e.cat}</span><br><span class="text-slate-300">${e.date}</span></div>
-                    <span class="text-rose-500 font-black text-xs">-৳${e.amt}</span>
-                </div>
+                <div class="border-b pb-2 flex justify-between items-center"><div class="text-[9px] font-bold">${e.cat}<br><small class="text-slate-300">${new Date(e.date).toLocaleDateString()}</small></div><span class="text-rose-500 font-black text-xs">-৳${e.amt}</span></div>
             `).join('');
         }
 
@@ -269,43 +355,38 @@
             const grid = document.getElementById('portalGrid');
             if(userRole === 'student') {
                 grid.innerHTML = `
-                    <div onclick="alert('GPA Working')" class="bg-blue-600 p-8 rounded-[2rem] text-white cursor-pointer shadow-lg">GPA CALCULATOR</div>
-                    <div onclick="openModal('routineModal')" class="bg-purple-600 p-8 rounded-[2rem] text-white cursor-pointer shadow-lg">CLASS ROUTINE</div>
-                    <div onclick="alert('Cover Working')" class="bg-indigo-600 p-8 rounded-[2rem] text-white cursor-pointer shadow-lg">COVER & INDEX</div>
+                    <div onclick="openModal('gpaModal')" class="bg-blue-600 p-8 rounded-[2rem] text-white shadow-lg cursor-pointer font-black italic">GPA CALCULATOR</div>
+                    <div onclick="openModal('routineModal')" class="bg-purple-600 p-8 rounded-[2rem] text-white shadow-lg cursor-pointer font-black italic">CLASS ROUTINE</div>
+                    <div onclick="openModal('coverModal')" class="bg-indigo-600 p-8 rounded-[2rem] text-white shadow-lg cursor-pointer font-black italic">COVER & INDEX</div>
                 `;
             } else {
                 grid.innerHTML = `
-                    <div onclick="alert('Calc Working')" class="bg-slate-700 p-8 rounded-[2rem] text-white cursor-pointer shadow-lg">CALCULATOR</div>
-                    <div onclick="alert('Schedule Working')" class="bg-emerald-600 p-8 rounded-[2rem] text-white cursor-pointer shadow-lg">WORK SCHEDULE</div>
-                    <div onclick="alert('Cover Working')" class="bg-indigo-600 p-8 rounded-[2rem] text-white cursor-pointer shadow-lg">COVER & INDEX</div>
+                    <div onclick="alert('Calc Opened')" class="bg-slate-700 p-8 rounded-[2rem] text-white shadow-lg cursor-pointer font-black italic">CALCULATOR</div>
+                    <div onclick="alert('Schedule Opened')" class="bg-emerald-600 p-8 rounded-[2rem] text-white shadow-lg cursor-pointer font-black italic">WORK SCHEDULE</div>
+                    <div onclick="openModal('coverModal')" class="bg-indigo-600 p-8 rounded-[2rem] text-white shadow-lg cursor-pointer font-black italic">COVER & INDEX</div>
                 `;
             }
         }
 
         function renderRoutineList() {
-            document.getElementById('routineDisplay').innerHTML = routines.map(r => `
-                <div class="text-[10px] bg-white p-3 rounded-xl border flex justify-between font-bold uppercase">
+            document.getElementById('routineDisplay').innerHTML = routines.map((r, i) => `
+                <div class="text-[10px] bg-white p-3 rounded-xl border flex justify-between font-bold">
                     <span>${r.course} (${r.code})<br><small>${r.teacher}</small></span>
                     <span class="text-indigo-600 text-right">${r.day}<br>${r.time}</span>
                 </div>
             `).join('');
         }
 
-        // UTILS
-        function updateBalance() {
-            const val = parseFloat(document.getElementById('topupAmt').value);
-            if(val) balance += val; localStorage.setItem('m_bal', balance); renderUI();
-            document.getElementById('topupAmt').value = "";
+        // HELPERS
+        function addRoutine() {
+            const r = { course: document.getElementById('rtCourse').value, code: document.getElementById('rtCode').value, teacher: document.getElementById('rtTeacher').value, day: document.getElementById('rtDay').value, time: document.getElementById('rtTime').value };
+            if(!r.course || !r.time) return;
+            routines.push(r); localStorage.setItem('m_routines', JSON.stringify(routines)); renderRoutineList();
         }
-        function switchTab(id) {
-            document.getElementById('expenseTab').classList.add('hidden-section');
-            document.getElementById('portalTab').classList.add('hidden-section');
-            document.getElementById(id).classList.remove('hidden-section');
-            document.getElementById('btnExpenseTab').classList.remove('active-tab');
-            document.getElementById('btnPortalTab').classList.remove('active-tab');
-            document.getElementById('btn' + id.charAt(0).toUpperCase() + id.slice(1)).classList.add('active-tab');
-        }
-        function openModal(id) { document.getElementById(id).classList.remove('hidden'); renderRoutineList(); }
+        function updateBalance() { const v = parseFloat(document.getElementById('topupAmt').value); if(v) balance += v; localStorage.setItem('m_bal', balance); renderUI(); document.getElementById('topupAmt').value = ""; }
+        function saveNote() { localStorage.setItem('m_note', document.getElementById('importantNote').value); }
+        function switchTab(id) { document.getElementById('expenseTab').classList.add('hidden-section'); document.getElementById('portalTab').classList.add('hidden-section'); document.getElementById(id).classList.remove('hidden-section'); document.getElementById('btnExpenseTab').classList.remove('active-tab'); document.getElementById('btnPortalTab').classList.remove('active-tab'); document.getElementById('btn' + id.charAt(0).toUpperCase() + id.slice(1)).classList.add('active-tab'); }
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); if(id==='routineModal') renderRoutineList(); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
         function logout() { localStorage.removeItem('active_user'); location.reload(); }
 
