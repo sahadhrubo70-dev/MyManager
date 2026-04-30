@@ -3,226 +3,255 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manager - Personal Assistant</title>
+    <title>Manager Pro - Hybrid Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
-        body { font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         .hidden-section { display: none !important; }
-        .captcha-box { user-select: none; letter-spacing: 5px; font-family: 'Courier New', Courier, monospace; }
+        .active-tab { border-bottom: 4px solid white; opacity: 1 !important; }
+        .captcha-box { user-select: none; letter-spacing: 5px; font-weight: 900; background: #e2e8f0; border-radius: 8px; }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen">
+<body class="min-h-screen">
 
-    <!-- 1. AUTH SCREEN (Manual Login/Signup) -->
-    <div id="authScreen" class="fixed inset-0 bg-indigo-700 z-[300] flex items-center justify-center p-6">
-        <div class="bg-white max-w-md w-full rounded-[2.5rem] p-8 shadow-2xl">
-            <div class="text-center mb-6">
-                <h1 class="text-3xl font-black italic text-indigo-600 uppercase">Manager</h1>
-                <p id="authTitle" class="text-slate-400 text-sm font-bold uppercase tracking-widest mt-1">Login</p>
-            </div>
-
+    <!-- 1. AUTH SCREEN -->
+    <div id="authScreen" class="fixed inset-0 bg-[#4f46e5] z-[500] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-[2.5rem] p-10 shadow-2xl">
+            <h1 class="text-3xl font-black italic text-[#4f46e5] text-center mb-6 uppercase">Manager</h1>
             <div id="authForm" class="space-y-4">
-                <div id="nameField" class="hidden-section">
-                    <label class="text-[10px] font-bold ml-2 uppercase text-slate-400">Full Name</label>
-                    <input type="text" id="fullName" class="w-full border p-3 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50">
+                <div id="regFields" class="hidden-section"><input type="text" id="fullName" placeholder="Full Name" class="w-full bg-slate-50 border p-4 rounded-2xl outline-none"></div>
+                <input type="text" id="username" placeholder="Username" class="w-full bg-slate-50 border p-4 rounded-2xl outline-none">
+                <input type="password" id="password" placeholder="Password" class="w-full bg-slate-50 border p-4 rounded-2xl outline-none">
+                <div class="flex items-center gap-4 bg-slate-100 p-3 rounded-2xl">
+                    <div id="captchaDisplay" class="captcha-box px-4 py-2 text-indigo-600 italic"></div>
+                    <input type="text" id="captchaInput" placeholder="Verify" class="flex-1 p-2 rounded-xl border-none outline-none text-center font-bold">
                 </div>
-                
-                <div>
-                    <label class="text-[10px] font-bold ml-2 uppercase text-slate-400">Password</label>
-                    <input type="password" id="password" class="w-full border p-3 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50">
-                </div>
-
-                <!-- Captcha Section -->
-                <div class="bg-slate-100 p-4 rounded-xl">
-                    <div class="flex justify-between items-center mb-2">
-                        <span id="captchaCode" class="captcha-box text-xl font-black italic text-indigo-600 bg-white px-4 py-1 rounded border border-dashed border-indigo-300"></span>
-                        <button onclick="generateCaptcha()" class="text-indigo-500 text-xs font-bold hover:underline">Refresh</button>
-                    </div>
-                    <input type="text" id="captchaInput" placeholder="Enter Captcha Code" class="w-full border p-2 rounded-lg text-center font-bold outline-none focus:ring-2 focus:ring-indigo-400">
-                </div>
-
-                <button onclick="handleAuth()" id="mainAuthBtn" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black shadow-lg transition transform hover:scale-[1.02]">LOGIN</button>
-                
-                <p class="text-center text-xs font-bold text-slate-400">
-                    <span id="toggleText">Don't have an account?</span> 
-                    <button onclick="toggleAuthMode()" id="toggleBtn" class="text-indigo-600 underline ml-1">Sign Up</button>
-                </p>
+                <button onclick="handleAuth()" id="authBtn" class="w-full bg-[#4f46e5] text-white py-4 rounded-2xl font-black shadow-lg">LOGIN</button>
+                <button onclick="toggleAuthMode()" id="toggleBtn" class="w-full text-xs font-bold text-slate-400 uppercase tracking-widest">Create New Account</button>
             </div>
         </div>
     </div>
 
-    <!-- 2. ROLE SELECTION SCREEN -->
-    <div id="selectionScreen" class="fixed inset-0 bg-indigo-700 z-[200] hidden flex items-center justify-center p-6">
-        <div class="bg-white max-w-md w-full rounded-[3rem] p-10 text-center shadow-2xl">
-            <h2 class="text-2xl font-black mb-6">Choose Your Role</h2>
-            <div class="space-y-4">
-                <button onclick="setRole('student')" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold">I'M A STUDENT</button>
-                <button onclick="setRole('pro')" class="w-full bg-emerald-600 text-white py-4 rounded-2xl font-bold">I'M A PROFESSIONAL</button>
+    <!-- 2. MAIN APP -->
+    <div id="mainApp" class="hidden-section">
+        <!-- Header & Tabs -->
+        <nav class="bg-[#4f46e5] text-white shadow-xl sticky top-0 z-[100]">
+            <div class="max-w-7xl mx-auto px-6 pt-6 pb-2 flex justify-between items-center">
+                <h1 class="text-xl font-black italic tracking-tighter uppercase">Manager</h1>
+                <div class="flex items-center gap-4">
+                    <span id="displayUserName" class="text-sm font-bold opacity-80">User</span>
+                    <button onclick="logout()" class="text-[10px] bg-white/20 px-4 py-1.5 rounded-lg font-black uppercase">Logout</button>
+                </div>
             </div>
-        </div>
-    </div>
-
-    <!-- 3. MAIN DASHBOARD -->
-    <div id="mainDashboard" class="hidden-section">
-        <nav class="bg-indigo-700 text-white p-4 px-8 flex justify-between items-center sticky top-0 z-50">
-            <h1 class="text-xl font-black italic tracking-tighter">MANAGER</h1>
-            <div class="flex items-center gap-3">
-                <span id="navUserName" class="font-bold text-xs">User</span>
-                <button onclick="logout()" class="bg-white/20 px-3 py-1 rounded-full text-[10px] font-bold">LOGOUT</button>
+            <!-- Tab Switcher (Inspired by your requirement) -->
+            <div class="max-w-7xl mx-auto px-6 flex gap-8">
+                <button onclick="switchTab('expenseTab')" id="btnExpenseTab" class="py-3 text-sm font-bold opacity-60 active-tab uppercase tracking-widest">Dashboard</button>
+                <button onclick="switchTab('studentTab')" id="btnStudentTab" class="py-3 text-sm font-bold opacity-60 uppercase tracking-widest">Student Portal</button>
             </div>
         </nav>
 
-        <div class="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
-            <!-- Dynamic Portal Content -->
-            <div id="dynamicPortal"></div>
+        <div class="max-w-7xl mx-auto p-6 md:p-10">
+            
+            <!-- TAB 1: EXPENSE & MAIN DASHBOARD -->
+            <div id="expenseTab" class="space-y-8 animate-fade-in">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Balance Card -->
+                    <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+                        <p class="text-slate-400 text-[10px] font-bold uppercase mb-2">Current Balance</p>
+                        <h2 class="text-4xl font-black text-slate-800 mb-6">৳ <span id="mainBal">0.00</span></h2>
+                        <input type="number" id="topupAmt" placeholder="Add Money" class="w-full border p-3 rounded-xl bg-slate-50 mb-2">
+                        <button onclick="updateBalance()" class="w-full bg-emerald-500 text-white py-2 rounded-xl font-bold">Add Funds</button>
+                    </div>
+
+                    <!-- Summary Card -->
+                    <div class="bg-[#4f46e5] p-8 rounded-[2.5rem] text-white shadow-xl flex flex-col justify-between">
+                        <div>
+                            <p class="text-white/60 text-[10px] font-bold uppercase">Monthly Spent</p>
+                            <h2 class="text-4xl font-black">৳ <span id="totalSpent">0.00</span></h2>
+                        </div>
+                        <button onclick="downloadStatement()" class="bg-white text-indigo-600 py-3 rounded-2xl font-black text-xs mt-4">Download Statement</button>
+                    </div>
+
+                    <!-- Quick Add Expense -->
+                    <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+                        <p class="text-slate-400 text-[10px] font-bold uppercase mb-4">Quick Expense</p>
+                        <input type="text" id="expNote" placeholder="Note" class="w-full border p-3 rounded-xl bg-slate-50 mb-2 outline-none">
+                        <input type="number" id="expAmount" placeholder="Amount" class="w-full border p-3 rounded-xl bg-slate-50 mb-2 outline-none">
+                        <button onclick="addExpense()" class="w-full bg-rose-500 text-white py-3 rounded-xl font-bold">Pay Now</button>
+                    </div>
+                </div>
+
+                <!-- Recent Transactions -->
+                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+                    <h3 class="text-lg font-black mb-6 italic uppercase text-slate-700">Recent Transactions</h3>
+                    <div id="transList" class="space-y-4">
+                        <!-- Transactions will appear here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: STUDENT PORTAL (As per image_e54e1a.png) -->
+            <div id="studentTab" class="hidden-section space-y-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- GPA Card -->
+                    <div onclick="openModal('gpaModal')" class="bg-blue-600 p-12 rounded-[2.5rem] text-white shadow-xl cursor-pointer transform hover:scale-105 transition-all">
+                        <i class="fas fa-calculator text-5xl mb-6"></i>
+                        <h2 class="text-3xl font-black italic mb-2">GPA CALCULATOR</h2>
+                        <p class="text-sm opacity-80 italic">Check your academic results</p>
+                    </div>
+                    <!-- Student Tools -->
+                    <div class="bg-[#6366f1] p-12 rounded-[2.5rem] text-white shadow-xl">
+                        <h2 class="text-2xl font-black italic mb-6">STUDENT TOOLS</h2>
+                        <div class="space-y-4">
+                            <button onclick="openModal('routineModal')" class="w-full bg-white text-indigo-600 py-4 rounded-2xl font-black">Class Routine</button>
+                            <button onclick="openModal('docModal')" class="w-full bg-white/20 text-white py-4 rounded-2xl font-black">Assignment Cover/Index</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Modals (GPA & Cover) -->
-    <div id="gpaModal" class="fixed inset-0 bg-black/60 hidden z-[400] flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8">
-            <h2 class="text-xl font-black mb-4 italic">GPA CALCULATOR</h2>
+    <!-- MODALS (GPA, Routine, etc.) -->
+    <div id="gpaModal" class="fixed inset-0 bg-black/60 hidden z-[200] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-[2.5rem] p-10">
+            <h2 class="text-2xl font-black italic mb-6 text-indigo-600">GPA CALCULATOR</h2>
             <div id="gpaInputs" class="space-y-2 mb-4">
-                <input type="number" step="0.01" class="w-full border p-3 rounded-xl gpa-val" placeholder="Enter Grade (e.g. 4.00)">
+                <input type="number" step="0.01" class="w-full border p-4 rounded-2xl gpa-val" placeholder="Enter Grade Point">
             </div>
-            <button onclick="addGpaField()" class="text-blue-600 font-bold text-xs mb-4">+ Add Subject</button>
-            <button onclick="calculateGpa()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold mb-2">Calculate</button>
-            <p id="gpaResult" class="text-center font-black text-2xl text-blue-600"></p>
-            <button onclick="closeModal('gpaModal')" class="w-full text-slate-400 text-sm mt-4">Close</button>
+            <button onclick="addGpaInput()" class="text-indigo-500 font-bold text-xs mb-6">+ Add Subject</button>
+            <button onclick="calcGpa()" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black">CALCULATE</button>
+            <p id="gpaFinal" class="text-4xl font-black text-center mt-6"></p>
+            <button onclick="closeModal('gpaModal')" class="w-full text-slate-300 font-bold mt-4 uppercase text-[10px]">Close Window</button>
         </div>
     </div>
 
     <script>
         let isLoginMode = true;
-        let generatedCaptcha = "";
-        let userData = JSON.parse(localStorage.getItem('m_user')) || null;
-        let role = localStorage.getItem('m_role');
+        let captchaVal = "";
+        let balance = parseFloat(localStorage.getItem('m_bal')) || 0;
+        let expenses = JSON.parse(localStorage.getItem('m_expenses')) || [];
 
-        // --- Auth System ---
+        // --- AUTH & CAPTCHA ---
         function generateCaptcha() {
-            const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-            generatedCaptcha = "";
-            for (let i = 0; i < 5; i++) {
-                generatedCaptcha += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            document.getElementById('captchaCode').innerText = generatedCaptcha;
+            captchaVal = Math.random().toString(36).substring(2, 7).toUpperCase();
+            document.getElementById('captchaDisplay').innerText = captchaVal;
         }
 
         function toggleAuthMode() {
             isLoginMode = !isLoginMode;
-            document.getElementById('nameField').classList.toggle('hidden-section');
-            document.getElementById('authTitle').innerText = isLoginMode ? "Login" : "Sign Up";
-            document.getElementById('mainAuthBtn').innerText = isLoginMode ? "LOGIN" : "CREATE ACCOUNT";
-            document.getElementById('toggleText').innerText = isLoginMode ? "Don't have an account?" : "Already have an account?";
-            document.getElementById('toggleBtn').innerText = isLoginMode ? "Sign Up" : "Login";
+            document.getElementById('regFields').classList.toggle('hidden-section');
+            document.getElementById('authBtn').innerText = isLoginMode ? "LOGIN" : "SIGN UP";
+            document.getElementById('toggleBtn').innerText = isLoginMode ? "Create New Account" : "Back to Login";
             generateCaptcha();
         }
 
         function handleAuth() {
-            const name = document.getElementById('fullName').value;
+            const user = document.getElementById('username').value;
             const pass = document.getElementById('password').value;
             const captcha = document.getElementById('captchaInput').value;
 
-            if (captcha.toUpperCase() !== generatedCaptcha) {
-                alert("Incorrect Captcha!");
-                generateCaptcha();
-                return;
-            }
+            if(captcha !== captchaVal) return alert("Invalid Captcha");
 
-            if (isLoginMode) {
-                const storedUser = JSON.parse(localStorage.getItem('m_account'));
-                if (storedUser && storedUser.password === pass) {
-                    userData = storedUser;
-                    loginSuccess();
-                } else {
-                    alert("Invalid Credentials!");
-                }
+            if(!isLoginMode) {
+                const name = document.getElementById('fullName').value;
+                localStorage.setItem(`user_${user}`, JSON.stringify({name, pass}));
+                alert("Account Created!"); toggleAuthMode();
             } else {
-                if (!name || !pass) return alert("Fill all fields!");
-                const newUser = { name, password: pass };
-                localStorage.setItem('m_account', JSON.stringify(newUser));
-                userData = newUser;
-                loginSuccess();
+                const data = JSON.parse(localStorage.getItem(`user_${user}`));
+                if(data && data.pass === pass) {
+                    localStorage.setItem('active_user', user);
+                    startApp(data.name);
+                } else alert("Error!");
             }
         }
 
-        function loginSuccess() {
+        // --- TAB SYSTEM ---
+        function switchTab(tabId) {
+            document.getElementById('expenseTab').classList.add('hidden-section');
+            document.getElementById('studentTab').classList.add('hidden-section');
+            document.getElementById(tabId).classList.remove('hidden-section');
+
+            document.getElementById('btnExpenseTab').classList.remove('active-tab');
+            document.getElementById('btnStudentTab').classList.remove('active-tab');
+            
+            if(tabId === 'expenseTab') document.getElementById('btnExpenseTab').classList.add('active-tab');
+            else document.getElementById('btnStudentTab').classList.add('active-tab');
+        }
+
+        // --- EXPENSE LOGIC ---
+        function addExpense() {
+            const note = document.getElementById('expNote').value;
+            const amt = parseFloat(document.getElementById('expAmount').value);
+            if(!note || !amt) return;
+            if(amt > balance) return alert("Low Balance!");
+
+            balance -= amt;
+            const transaction = { note, amt, date: new Date().toLocaleString() };
+            expenses.unshift(transaction);
+            saveAndRefresh();
+            document.getElementById('expNote').value = "";
+            document.getElementById('expAmount').value = "";
+        }
+
+        function updateBalance() {
+            const amt = parseFloat(document.getElementById('topupAmt').value);
+            if(amt) { balance += amt; saveAndRefresh(); }
+            document.getElementById('topupAmt').value = "";
+        }
+
+        function saveAndRefresh() {
+            localStorage.setItem('m_bal', balance);
+            localStorage.setItem('m_expenses', JSON.stringify(expenses));
+            renderDashboard();
+        }
+
+        function renderDashboard() {
+            document.getElementById('mainBal').innerText = balance.toLocaleString();
+            let totalSpent = expenses.reduce((s, e) => s + e.amt, 0);
+            document.getElementById('totalSpent').innerText = totalSpent.toLocaleString();
+
+            const list = document.getElementById('transList');
+            list.innerHTML = expenses.map(e => `
+                <div class="flex justify-between items-center bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <div><p class="font-bold text-slate-700">${e.note}</p><p class="text-[9px] text-slate-400 font-bold">${e.date}</p></div>
+                    <p class="font-black text-rose-500">- ৳${e.amt}</p>
+                </div>
+            `).join('');
+        }
+
+        // --- HELPERS ---
+        function startApp(name) {
             document.getElementById('authScreen').classList.add('hidden-section');
-            document.getElementById('navUserName').innerText = userData.name;
-            if (!role) {
-                document.getElementById('selectionScreen').classList.remove('hidden');
-            } else {
-                initDashboard();
-            }
+            document.getElementById('mainApp').classList.remove('hidden-section');
+            document.getElementById('displayUserName').innerText = name;
+            renderDashboard();
         }
 
-        function setRole(r) {
-            localStorage.setItem('m_role', r);
-            role = r;
-            document.getElementById('selectionScreen').classList.add('hidden');
-            initDashboard();
-        }
-
-        function initDashboard() {
-            document.getElementById('mainDashboard').classList.remove('hidden-section');
-            renderPortal();
-        }
-
-        function renderPortal() {
-            const portal = document.getElementById('dynamicPortal');
-            if (role === 'student') {
-                portal.innerHTML = `
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div onclick="openModal('gpaModal')" class="bg-blue-600 p-10 rounded-[2.5rem] text-white cursor-pointer shadow-xl transform hover:scale-105 transition">
-                            <i class="fas fa-calculator text-4xl mb-4"></i>
-                            <h2 class="text-2xl font-black italic">GPA CALCULATOR</h2>
-                            <p class="text-sm opacity-70 italic">Check your academic results</p>
-                        </div>
-                        <div class="bg-indigo-600 p-10 rounded-[2.5rem] text-white shadow-xl">
-                            <h2 class="text-2xl font-black italic mb-4">STUDENT TOOLS</h2>
-                            <div class="space-y-3">
-                                <button class="w-full bg-white text-indigo-600 py-3 rounded-xl font-bold">Class Routine</button>
-                                <button class="w-full bg-white/20 py-3 rounded-xl font-bold">Assignment Cover</button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } else {
-                portal.innerHTML = `
-                    <div class="bg-emerald-600 p-12 rounded-[3rem] text-white text-center shadow-xl">
-                        <i class="fas fa-briefcase text-6xl mb-6"></i>
-                        <h2 class="text-3xl font-black italic mb-4 uppercase">Professional Portal</h2>
-                        <button onclick="alert('Downloading...')" class="bg-white text-emerald-600 px-10 py-4 rounded-2xl font-black shadow-lg">DOWNLOAD STATEMENT</button>
-                    </div>
-                `;
-            }
-        }
-
-        function logout() {
-            localStorage.removeItem('m_role');
-            location.reload();
-        }
-
-        // --- Modal Helpers ---
+        function logout() { localStorage.removeItem('active_user'); location.reload(); }
         function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-
-        function addGpaField() {
-            document.getElementById('gpaInputs').insertAdjacentHTML('beforeend', `<input type="number" step="0.01" class="w-full border p-3 rounded-xl gpa-val" placeholder="Grade">`);
-        }
-
-        function calculateGpa() {
-            const grades = document.querySelectorAll('.gpa-val');
+        function addGpaInput() { document.getElementById('gpaInputs').insertAdjacentHTML('beforeend', `<input type="number" step="0.01" class="w-full border p-4 rounded-2xl gpa-val" placeholder="Grade Point">`); }
+        
+        function calcGpa() {
+            const vals = document.querySelectorAll('.gpa-val');
             let sum = 0, count = 0;
-            grades.forEach(g => { if(g.value) { sum += parseFloat(g.value); count++; }});
-            document.getElementById('gpaResult').innerText = count > 0 ? "GPA: " + (sum / count).toFixed(2) : "0.00";
+            vals.forEach(v => { if(v.value) { sum += parseFloat(v.value); count++; }});
+            document.getElementById('gpaFinal').innerText = count > 0 ? (sum/count).toFixed(2) : "0.00";
         }
 
-        generateCaptcha();
+        window.onload = () => {
+            generateCaptcha();
+            const active = localStorage.getItem('active_user');
+            if(active) {
+                const data = JSON.parse(localStorage.getItem(`user_${active}`));
+                startApp(data.name);
+            }
+        };
     </script>
 </body>
 </html>
