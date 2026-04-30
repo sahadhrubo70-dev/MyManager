@@ -3,46 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manager - Pro Assistant</title>
+    <title>Manager - Personal Assistant</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
-    <!-- Firebase & PDF Libraries -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
-        body { font-family: 'Inter', sans-serif; transition: all 0.3s; }
+        body { font-family: 'Inter', sans-serif; overflow-x: hidden; }
         .hidden-section { display: none !important; }
-        .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
+        .captcha-box { user-select: none; letter-spacing: 5px; font-family: 'Courier New', Courier, monospace; }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen">
 
-    <!-- 1. AUTH SCREEN (Google Login) -->
-    <div id="authScreen" class="fixed inset-0 bg-white z-[300] flex items-center justify-center p-6">
-        <div class="text-center max-w-sm w-full">
-            <div class="mb-8">
-                <i class="fas fa-user-shield text-6xl text-indigo-600"></i>
-                <h1 class="text-4xl font-black italic uppercase tracking-tighter mt-4">Manager</h1>
+    <!-- 1. AUTH SCREEN (Manual Login/Signup) -->
+    <div id="authScreen" class="fixed inset-0 bg-indigo-700 z-[300] flex items-center justify-center p-6">
+        <div class="bg-white max-w-md w-full rounded-[2.5rem] p-8 shadow-2xl">
+            <div class="text-center mb-6">
+                <h1 class="text-3xl font-black italic text-indigo-600 uppercase">Manager</h1>
+                <p id="authTitle" class="text-slate-400 text-sm font-bold uppercase tracking-widest mt-1">Login</p>
             </div>
-            <button onclick="googleLogin()" class="w-full flex items-center justify-center gap-3 bg-white border border-slate-200 py-4 rounded-2xl font-bold shadow-sm hover:bg-slate-50 transition">
-                <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" class="w-6" alt="">
-                Sign in with Google
-            </button>
+
+            <div id="authForm" class="space-y-4">
+                <div id="nameField" class="hidden-section">
+                    <label class="text-[10px] font-bold ml-2 uppercase text-slate-400">Full Name</label>
+                    <input type="text" id="fullName" class="w-full border p-3 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50">
+                </div>
+                
+                <div>
+                    <label class="text-[10px] font-bold ml-2 uppercase text-slate-400">Password</label>
+                    <input type="password" id="password" class="w-full border p-3 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50">
+                </div>
+
+                <!-- Captcha Section -->
+                <div class="bg-slate-100 p-4 rounded-xl">
+                    <div class="flex justify-between items-center mb-2">
+                        <span id="captchaCode" class="captcha-box text-xl font-black italic text-indigo-600 bg-white px-4 py-1 rounded border border-dashed border-indigo-300"></span>
+                        <button onclick="generateCaptcha()" class="text-indigo-500 text-xs font-bold hover:underline">Refresh</button>
+                    </div>
+                    <input type="text" id="captchaInput" placeholder="Enter Captcha Code" class="w-full border p-2 rounded-lg text-center font-bold outline-none focus:ring-2 focus:ring-indigo-400">
+                </div>
+
+                <button onclick="handleAuth()" id="mainAuthBtn" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black shadow-lg transition transform hover:scale-[1.02]">LOGIN</button>
+                
+                <p class="text-center text-xs font-bold text-slate-400">
+                    <span id="toggleText">Don't have an account?</span> 
+                    <button onclick="toggleAuthMode()" id="toggleBtn" class="text-indigo-600 underline ml-1">Sign Up</button>
+                </p>
+            </div>
         </div>
     </div>
 
     <!-- 2. ROLE SELECTION SCREEN -->
     <div id="selectionScreen" class="fixed inset-0 bg-indigo-700 z-[200] hidden flex items-center justify-center p-6">
         <div class="bg-white max-w-md w-full rounded-[3rem] p-10 text-center shadow-2xl">
-            <h2 class="text-3xl font-black mb-6">Choose Your Role</h2>
+            <h2 class="text-2xl font-black mb-6">Choose Your Role</h2>
             <div class="space-y-4">
-                <button onclick="setRole('student')" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 transition transform hover:scale-105">I'M A STUDENT</button>
-                <button onclick="setRole('pro')" class="w-full bg-emerald-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-emerald-200 transition transform hover:scale-105">I'M A PROFESSIONAL</button>
+                <button onclick="setRole('student')" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold">I'M A STUDENT</button>
+                <button onclick="setRole('pro')" class="w-full bg-emerald-600 text-white py-4 rounded-2xl font-bold">I'M A PROFESSIONAL</button>
             </div>
         </div>
     </div>
@@ -50,201 +69,160 @@
     <!-- 3. MAIN DASHBOARD -->
     <div id="mainDashboard" class="hidden-section">
         <nav class="bg-indigo-700 text-white p-4 px-8 flex justify-between items-center sticky top-0 z-50">
-            <h1 class="text-2xl font-black italic tracking-tighter">MANAGER</h1>
-            <div class="flex items-center gap-4">
-                <img id="userImg" class="w-10 h-10 rounded-full border-2 border-white shadow-sm" src="" alt="">
-                <button onclick="logout()" class="text-xs opacity-70 hover:opacity-100 font-bold uppercase">Logout</button>
+            <h1 class="text-xl font-black italic tracking-tighter">MANAGER</h1>
+            <div class="flex items-center gap-3">
+                <span id="navUserName" class="font-bold text-xs">User</span>
+                <button onclick="logout()" class="bg-white/20 px-3 py-1 rounded-full text-[10px] font-bold">LOGOUT</button>
             </div>
         </nav>
 
-        <div class="max-w-6xl mx-auto p-4 md:p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-            
-            <!-- Shared Section: Balance -->
-            <div class="bg-white p-6 rounded-[2rem] shadow-sm border col-span-1">
-                <h3 class="text-slate-400 text-xs font-bold uppercase mb-4">Account Balance</h3>
-                <p class="text-4xl font-black mb-4">৳ <span id="displayBalance">0.00</span></p>
-                <input type="number" id="initBalance" placeholder="Update Balance" class="w-full bg-slate-50 border p-3 rounded-xl outline-none mb-2">
-                <button onclick="setBalance()" class="w-full bg-indigo-600 text-white py-2 rounded-xl font-bold">Update</button>
-            </div>
-
-            <!-- Student/Pro Dynamic Section -->
-            <div id="dynamicPortal" class="md:col-span-2 space-y-6">
-                <!-- Dynamically Injected -->
-            </div>
-
+        <div class="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
+            <!-- Dynamic Portal Content -->
+            <div id="dynamicPortal"></div>
         </div>
     </div>
 
-    <!-- 4. MODALS (Routine, GPA, Cover) -->
-    <!-- GPA Calculator Modal -->
-    <div id="gpaModal" class="fixed inset-0 bg-black/60 hidden z-[400] flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-lg rounded-[2.5rem] p-8">
-            <h2 class="text-2xl font-black mb-4 italic">GPA CALCULATOR</h2>
+    <!-- Modals (GPA & Cover) -->
+    <div id="gpaModal" class="fixed inset-0 bg-black/60 hidden z-[400] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8">
+            <h2 class="text-xl font-black mb-4 italic">GPA CALCULATOR</h2>
             <div id="gpaInputs" class="space-y-2 mb-4">
-                <div class="flex gap-2">
-                    <input type="text" placeholder="Subject" class="w-1/2 border p-2 rounded-lg">
-                    <input type="number" step="0.01" placeholder="Grade (e.g. 4.00)" class="w-1/2 border p-2 rounded-lg gpa-val">
-                </div>
+                <input type="number" step="0.01" class="w-full border p-3 rounded-xl gpa-val" placeholder="Enter Grade (e.g. 4.00)">
             </div>
-            <button onclick="addGpaField()" class="text-blue-600 font-bold text-xs mb-4">+ Add More Subject</button>
-            <div class="flex gap-4">
-                <button onclick="calculateGpa()" class="bg-blue-600 text-white flex-1 py-3 rounded-xl font-bold">Calculate GPA</button>
-                <button onclick="closeModal('gpaModal')" class="bg-slate-200 flex-1 py-3 rounded-xl font-bold">Close</button>
-            </div>
-            <p id="gpaResult" class="text-3xl font-black text-center mt-6 text-blue-700"></p>
-        </div>
-    </div>
-
-    <!-- Assignment Cover Modal -->
-    <div id="coverModal" class="fixed inset-0 bg-black/60 hidden z-[400] flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-lg rounded-[2.5rem] p-8">
-            <h2 class="text-2xl font-black mb-4 italic">COVER PAGE DESIGN</h2>
-            <div class="space-y-3">
-                <input type="text" id="uniName" placeholder="University/School Name" class="w-full border p-3 rounded-xl">
-                <input type="text" id="assignTitle" placeholder="Assignment Title" class="w-full border p-3 rounded-xl">
-                <input type="text" id="stdName" placeholder="Student Name & ID" class="w-full border p-3 rounded-xl">
-                <button onclick="generateCover()" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold">Download Cover PDF</button>
-                <button onclick="closeModal('coverModal')" class="w-full text-slate-400 font-bold">Cancel</button>
-            </div>
+            <button onclick="addGpaField()" class="text-blue-600 font-bold text-xs mb-4">+ Add Subject</button>
+            <button onclick="calculateGpa()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold mb-2">Calculate</button>
+            <p id="gpaResult" class="text-center font-black text-2xl text-blue-600"></p>
+            <button onclick="closeModal('gpaModal')" class="w-full text-slate-400 text-sm mt-4">Close</button>
         </div>
     </div>
 
     <script>
-        // --- FIREBASE CONFIG (নিচের কি গুলো আপনার Firebase থেকে রিপ্লেস করুন) ---
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT.appspot.com",
-            messagingSenderId: "YOUR_ID",
-            appId: "YOUR_APP_ID"
-        };
-        firebase.initializeApp(firebaseConfig);
-
-        const auth = firebase.auth();
-        const provider = new firebase.auth.GoogleAuthProvider();
-
-        let balance = parseFloat(localStorage.getItem('m_bal')) || 0;
+        let isLoginMode = true;
+        let generatedCaptcha = "";
+        let userData = JSON.parse(localStorage.getItem('m_user')) || null;
         let role = localStorage.getItem('m_role');
 
-        // --- Auth Functions ---
-        function googleLogin() {
-            auth.signInWithPopup(provider).then((result) => {
-                const user = result.user;
-                document.getElementById('userImg').src = user.photoURL;
-                document.getElementById('authScreen').classList.add('hidden-section');
-                if(!role) {
-                    document.getElementById('selectionScreen').classList.remove('hidden');
-                } else {
-                    initApp();
-                }
-            });
+        // --- Auth System ---
+        function generateCaptcha() {
+            const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            generatedCaptcha = "";
+            for (let i = 0; i < 5; i++) {
+                generatedCaptcha += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            document.getElementById('captchaCode').innerText = generatedCaptcha;
         }
 
-        function logout() {
-            auth.signOut().then(() => location.reload());
+        function toggleAuthMode() {
+            isLoginMode = !isLoginMode;
+            document.getElementById('nameField').classList.toggle('hidden-section');
+            document.getElementById('authTitle').innerText = isLoginMode ? "Login" : "Sign Up";
+            document.getElementById('mainAuthBtn').innerText = isLoginMode ? "LOGIN" : "CREATE ACCOUNT";
+            document.getElementById('toggleText').innerText = isLoginMode ? "Don't have an account?" : "Already have an account?";
+            document.getElementById('toggleBtn').innerText = isLoginMode ? "Sign Up" : "Login";
+            generateCaptcha();
+        }
+
+        function handleAuth() {
+            const name = document.getElementById('fullName').value;
+            const pass = document.getElementById('password').value;
+            const captcha = document.getElementById('captchaInput').value;
+
+            if (captcha.toUpperCase() !== generatedCaptcha) {
+                alert("Incorrect Captcha!");
+                generateCaptcha();
+                return;
+            }
+
+            if (isLoginMode) {
+                const storedUser = JSON.parse(localStorage.getItem('m_account'));
+                if (storedUser && storedUser.password === pass) {
+                    userData = storedUser;
+                    loginSuccess();
+                } else {
+                    alert("Invalid Credentials!");
+                }
+            } else {
+                if (!name || !pass) return alert("Fill all fields!");
+                const newUser = { name, password: pass };
+                localStorage.setItem('m_account', JSON.stringify(newUser));
+                userData = newUser;
+                loginSuccess();
+            }
+        }
+
+        function loginSuccess() {
+            document.getElementById('authScreen').classList.add('hidden-section');
+            document.getElementById('navUserName').innerText = userData.name;
+            if (!role) {
+                document.getElementById('selectionScreen').classList.remove('hidden');
+            } else {
+                initDashboard();
+            }
         }
 
         function setRole(r) {
             localStorage.setItem('m_role', r);
             role = r;
             document.getElementById('selectionScreen').classList.add('hidden');
-            initApp();
+            initDashboard();
         }
 
-        function initApp() {
+        function initDashboard() {
             document.getElementById('mainDashboard').classList.remove('hidden-section');
-            renderDynamicPortal();
-            updateUI();
+            renderPortal();
         }
 
-        function setBalance() {
-            const val = document.getElementById('initBalance').value;
-            if(val) balance = parseFloat(val);
-            updateUI();
-        }
-
-        function updateUI() {
-            document.getElementById('displayBalance').innerText = balance.toLocaleString();
-            localStorage.setItem('m_bal', balance);
-        }
-
-        function renderDynamicPortal() {
-            const container = document.getElementById('dynamicPortal');
-            if(role === 'student') {
-                container.innerHTML = `
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div onclick="openModal('gpaModal')" class="bg-blue-600 p-8 rounded-[2rem] text-white cursor-pointer hover:scale-105 transition">
+        function renderPortal() {
+            const portal = document.getElementById('dynamicPortal');
+            if (role === 'student') {
+                portal.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div onclick="openModal('gpaModal')" class="bg-blue-600 p-10 rounded-[2.5rem] text-white cursor-pointer shadow-xl transform hover:scale-105 transition">
                             <i class="fas fa-calculator text-4xl mb-4"></i>
-                            <h2 class="text-xl font-bold">GPA Calculator</h2>
-                            <p class="text-xs opacity-70">Calculate your semester result</p>
+                            <h2 class="text-2xl font-black italic">GPA CALCULATOR</h2>
+                            <p class="text-sm opacity-70 italic">Check your academic results</p>
                         </div>
-                        <div onclick="openModal('coverModal')" class="bg-indigo-600 p-8 rounded-[2rem] text-white cursor-pointer hover:scale-105 transition">
-                            <i class="fas fa-file-pdf text-4xl mb-4"></i>
-                            <h2 class="text-xl font-bold">Cover Page Generator</h2>
-                            <p class="text-xs opacity-70">Make professional assignment covers</p>
+                        <div class="bg-indigo-600 p-10 rounded-[2.5rem] text-white shadow-xl">
+                            <h2 class="text-2xl font-black italic mb-4">STUDENT TOOLS</h2>
+                            <div class="space-y-3">
+                                <button class="w-full bg-white text-indigo-600 py-3 rounded-xl font-bold">Class Routine</button>
+                                <button class="w-full bg-white/20 py-3 rounded-xl font-bold">Assignment Cover</button>
+                            </div>
                         </div>
                     </div>
                 `;
             } else {
-                container.innerHTML = `
-                    <div class="bg-emerald-600 p-12 rounded-[2rem] text-white text-center">
+                portal.innerHTML = `
+                    <div class="bg-emerald-600 p-12 rounded-[3rem] text-white text-center shadow-xl">
                         <i class="fas fa-briefcase text-6xl mb-6"></i>
-                        <h2 class="text-3xl font-black italic mb-2">Professional Dashboard</h2>
-                        <p class="mb-8 opacity-80 italic">Manage your daily statement and financials</p>
-                        <button onclick="downloadFullStatement()" class="bg-white text-emerald-600 px-8 py-4 rounded-2xl font-bold">DOWNLOAD REPORT</button>
+                        <h2 class="text-3xl font-black italic mb-4 uppercase">Professional Portal</h2>
+                        <button onclick="alert('Downloading...')" class="bg-white text-emerald-600 px-10 py-4 rounded-2xl font-black shadow-lg">DOWNLOAD STATEMENT</button>
                     </div>
                 `;
             }
         }
 
-        // --- Feature Logics ---
+        function logout() {
+            localStorage.removeItem('m_role');
+            location.reload();
+        }
+
+        // --- Modal Helpers ---
         function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
         function addGpaField() {
-            document.getElementById('gpaInputs').insertAdjacentHTML('beforeend', `
-                <div class="flex gap-2">
-                    <input type="text" placeholder="Subject" class="w-1/2 border p-2 rounded-lg">
-                    <input type="number" step="0.01" placeholder="Grade" class="w-1/2 border p-2 rounded-lg gpa-val">
-                </div>
-            `);
+            document.getElementById('gpaInputs').insertAdjacentHTML('beforeend', `<input type="number" step="0.01" class="w-full border p-3 rounded-xl gpa-val" placeholder="Grade">`);
         }
 
         function calculateGpa() {
             const grades = document.querySelectorAll('.gpa-val');
-            let total = 0, count = 0;
-            grades.forEach(g => {
-                if(g.value) { total += parseFloat(g.value); count++; }
-            });
-            document.getElementById('gpaResult').innerText = count > 0 ? (total / count).toFixed(2) : "0.00";
+            let sum = 0, count = 0;
+            grades.forEach(g => { if(g.value) { sum += parseFloat(g.value); count++; }});
+            document.getElementById('gpaResult').innerText = count > 0 ? "GPA: " + (sum / count).toFixed(2) : "0.00";
         }
 
-        function generateCover() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            const uni = document.getElementById('uniName').value;
-            const title = document.getElementById('assignTitle').value;
-            const name = document.getElementById('stdName').value;
-
-            doc.setFontSize(26); doc.text(uni.toUpperCase(), 105, 60, null, null, "center");
-            doc.setFontSize(16); doc.text("ASSIGNMENT ON", 105, 100, null, null, "center");
-            doc.setFontSize(22); doc.text(title, 105, 120, null, null, "center");
-            doc.setFontSize(14); doc.text("SUBMITTED BY", 105, 180, null, null, "center");
-            doc.text(name, 105, 195, null, null, "center");
-            doc.text("Date: " + new Date().toLocaleDateString(), 105, 210, null, null, "center");
-            
-            doc.save("Cover_Page.pdf");
-        }
-
-        auth.onAuthStateChanged(user => {
-            if(user) {
-                document.getElementById('userImg').src = user.photoURL;
-                document.getElementById('authScreen').classList.add('hidden-section');
-                if(!role) document.getElementById('selectionScreen').classList.remove('hidden');
-                else initApp();
-            }
-        });
+        generateCaptcha();
     </script>
 </body>
 </html>
