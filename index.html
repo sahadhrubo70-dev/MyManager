@@ -3,284 +3,248 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manager - Personalized Assistant</title>
+    <title>Manager - Pro Assistant</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Firebase & PDF Libraries -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
-        body { font-family: 'Inter', sans-serif; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; transition: all 0.3s; }
         .hidden-section { display: none !important; }
+        .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-900 min-h-screen">
+<body class="bg-slate-100 min-h-screen">
 
-    <div id="selectionScreen" class="fixed inset-0 bg-indigo-700 z-[200] flex items-center justify-center p-6">
-        <div class="bg-white max-w-md w-full rounded-[2.5rem] p-10 text-center shadow-2xl">
-            <i class="fas fa-user-circle text-6xl text-indigo-600 mb-4"></i>
-            <h2 class="text-3xl font-black text-slate-800 mb-2 tracking-tighter">WELCOME!</h2>
-            <p class="text-slate-500 mb-8 font-medium">Please select your current role to personalize your experience.</p>
-            
+    <!-- 1. AUTH SCREEN (Google Login) -->
+    <div id="authScreen" class="fixed inset-0 bg-white z-[300] flex items-center justify-center p-6">
+        <div class="text-center max-w-sm w-full">
+            <div class="mb-8">
+                <i class="fas fa-user-shield text-6xl text-indigo-600"></i>
+                <h1 class="text-4xl font-black italic uppercase tracking-tighter mt-4">Manager</h1>
+            </div>
+            <button onclick="googleLogin()" class="w-full flex items-center justify-center gap-3 bg-white border border-slate-200 py-4 rounded-2xl font-bold shadow-sm hover:bg-slate-50 transition">
+                <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" class="w-6" alt="">
+                Sign in with Google
+            </button>
+        </div>
+    </div>
+
+    <!-- 2. ROLE SELECTION SCREEN -->
+    <div id="selectionScreen" class="fixed inset-0 bg-indigo-700 z-[200] hidden flex items-center justify-center p-6">
+        <div class="bg-white max-w-md w-full rounded-[3rem] p-10 text-center shadow-2xl">
+            <h2 class="text-3xl font-black mb-6">Choose Your Role</h2>
             <div class="space-y-4">
-                <button onclick="setRole('student')" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-black flex items-center justify-center gap-3 transition transform hover:scale-105">
-                    <i class="fas fa-graduation-cap"></i> I AM A STUDENT
-                </button>
-                <button onclick="setRole('pro')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-2xl font-black flex items-center justify-center gap-3 transition transform hover:scale-105">
-                    <i class="fas fa-briefcase"></i> I AM A PROFESSIONAL
-                </button>
+                <button onclick="setRole('student')" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-blue-200 transition transform hover:scale-105">I'M A STUDENT</button>
+                <button onclick="setRole('pro')" class="w-full bg-emerald-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-emerald-200 transition transform hover:scale-105">I'M A PROFESSIONAL</button>
             </div>
         </div>
     </div>
 
+    <!-- 3. MAIN DASHBOARD -->
     <div id="mainDashboard" class="hidden-section">
-        <nav class="bg-indigo-700 text-white p-4 shadow-xl flex justify-between items-center px-6 sticky top-0 z-50">
-            <div class="flex items-center gap-2">
-                <i class="fas fa-user-shield text-2xl text-yellow-400"></i>
-                <h1 class="text-xl font-bold tracking-tighter uppercase italic">Manager</h1>
-                <span id="roleBadge" class="ml-2 bg-white/20 px-3 py-0.5 rounded-full text-[10px] uppercase font-black">Role</span>
-            </div>
-            <div class="text-right">
-                <p id="live-date" class="text-[10px] uppercase tracking-widest opacity-70"></p>
-                <p id="live-time" class="text-lg font-mono font-bold"></p>
+        <nav class="bg-indigo-700 text-white p-4 px-8 flex justify-between items-center sticky top-0 z-50">
+            <h1 class="text-2xl font-black italic tracking-tighter">MANAGER</h1>
+            <div class="flex items-center gap-4">
+                <img id="userImg" class="w-10 h-10 rounded-full border-2 border-white shadow-sm" src="" alt="">
+                <button onclick="logout()" class="text-xs opacity-70 hover:opacity-100 font-bold uppercase">Logout</button>
             </div>
         </nav>
 
-        <div class="max-w-6xl mx-auto p-4 md:p-8 space-y-8">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-                    <h3 class="text-slate-400 text-xs font-bold uppercase mb-2">Total Balance</h3>
-                    <div class="flex items-center gap-2 mb-4">
-                        <input type="number" id="initBalance" placeholder="Set Balance" class="w-full border border-slate-200 p-2 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
-                        <button onclick="setBalance()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold">Set</button>
-                    </div>
-                    <p class="text-4xl font-black text-slate-800">৳ <span id="displayBalance">0.00</span></p>
-                </div>
-
-                <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex items-center justify-between">
-                    <div>
-                        <h3 class="text-slate-400 text-xs font-bold uppercase mb-1">Live Weather</h3>
-                        <p id="temp" class="text-2xl font-black">32°C</p>
-                        <p id="city" class="text-slate-400 text-[10px] font-bold">Dhaka, Bangladesh</p>
-                    </div>
-                    <i class="fas fa-cloud-sun text-4xl text-orange-400"></i>
-                </div>
-
-                <div class="bg-indigo-900 p-6 rounded-3xl text-white flex flex-col justify-center">
-                    <button onclick="downloadStatement()" class="bg-white text-indigo-900 py-3 rounded-2xl font-bold text-xs shadow-lg hover:bg-yellow-400 transition">
-                        <i class="fas fa-file-download mr-2"></i>Download Monthly Statement
-                    </button>
-                    <button onclick="resetRole()" class="mt-2 text-[9px] opacity-50 hover:opacity-100 uppercase font-bold tracking-widest underline">Change Role</button>
-                </div>
+        <div class="max-w-6xl mx-auto p-4 md:p-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- Shared Section: Balance -->
+            <div class="bg-white p-6 rounded-[2rem] shadow-sm border col-span-1">
+                <h3 class="text-slate-400 text-xs font-bold uppercase mb-4">Account Balance</h3>
+                <p class="text-4xl font-black mb-4">৳ <span id="displayBalance">0.00</span></p>
+                <input type="number" id="initBalance" placeholder="Update Balance" class="w-full bg-slate-50 border p-3 rounded-xl outline-none mb-2">
+                <button onclick="setBalance()" class="w-full bg-indigo-600 text-white py-2 rounded-xl font-bold">Update</button>
             </div>
 
-            <div class="bg-white p-6 rounded-3xl shadow-md border border-slate-100">
-                <h2 class="text-lg font-bold mb-6 flex items-center gap-2 text-indigo-600 italic">
-                    <i class="fas fa-calendar-check"></i> Add Entry
-                </h2>
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <select id="expCategory" class="border border-slate-200 p-3 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-400 bg-slate-50">
-                        <option value="House Rent">Rent</option>
-                        <option value="Market">Monthly Market</option>
-                        <option value="Education">Education/Books</option>
-                        <option value="Bill">Utility Bill</option>
-                        <option value="Personal">Personal Expense</option>
-                    </select>
-                    <input type="number" id="expAmount" placeholder="Amount (৳)" class="border border-slate-200 p-3 rounded-2xl outline-none">
-                    <input type="datetime-local" id="expDate" class="border border-slate-200 p-3 rounded-2xl outline-none text-xs">
-                    <button onclick="scheduleTask()" class="bg-indigo-600 text-white font-bold py-3 rounded-2xl">Save Task</button>
-                </div>
+            <!-- Student/Pro Dynamic Section -->
+            <div id="dynamicPortal" class="md:col-span-2 space-y-6">
+                <!-- Dynamically Injected -->
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div class="bg-white p-6 rounded-3xl shadow-md border border-slate-100">
-                    <h2 class="text-lg font-bold mb-4 text-orange-500">Reminders</h2>
-                    <div id="pendingList" class="space-y-3"></div>
-                </div>
-
-                <div id="roleContent" class="space-y-4">
-                    </div>
-            </div>
         </div>
     </div>
 
-    <div id="routineModal" class="fixed inset-0 bg-black/60 hidden z-[150] flex items-center justify-center p-4 backdrop-blur-md">
-        <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-black italic">ADD ROUTINE</h2>
-                <button onclick="toggleRoutine()" class="text-3xl">&times;</button>
-            </div>
-            <div class="space-y-3">
-                <input type="text" id="subject" placeholder="Subject" class="w-full border p-3 rounded-2xl bg-slate-50">
-                <div class="grid grid-cols-2 gap-3">
-                    <input type="time" id="classTime" class="border p-3 rounded-2xl bg-slate-50">
-                    <select id="day" class="border p-3 rounded-2xl bg-slate-50">
-                        <option>Sat</option><option>Sun</option><option>Mon</option><option>Tue</option><option>Wed</option><option>Thu</option><option>Fri</option>
-                    </select>
+    <!-- 4. MODALS (Routine, GPA, Cover) -->
+    <!-- GPA Calculator Modal -->
+    <div id="gpaModal" class="fixed inset-0 bg-black/60 hidden z-[400] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-[2.5rem] p-8">
+            <h2 class="text-2xl font-black mb-4 italic">GPA CALCULATOR</h2>
+            <div id="gpaInputs" class="space-y-2 mb-4">
+                <div class="flex gap-2">
+                    <input type="text" placeholder="Subject" class="w-1/2 border p-2 rounded-lg">
+                    <input type="number" step="0.01" placeholder="Grade (e.g. 4.00)" class="w-1/2 border p-2 rounded-lg gpa-val">
                 </div>
-                <button onclick="addRoutine()" class="w-full bg-blue-600 text-white py-3 rounded-2xl font-bold">Save Routine</button>
-                <div id="routineTable" class="max-h-48 overflow-y-auto space-y-2 pt-4"></div>
+            </div>
+            <button onclick="addGpaField()" class="text-blue-600 font-bold text-xs mb-4">+ Add More Subject</button>
+            <div class="flex gap-4">
+                <button onclick="calculateGpa()" class="bg-blue-600 text-white flex-1 py-3 rounded-xl font-bold">Calculate GPA</button>
+                <button onclick="closeModal('gpaModal')" class="bg-slate-200 flex-1 py-3 rounded-xl font-bold">Close</button>
+            </div>
+            <p id="gpaResult" class="text-3xl font-black text-center mt-6 text-blue-700"></p>
+        </div>
+    </div>
+
+    <!-- Assignment Cover Modal -->
+    <div id="coverModal" class="fixed inset-0 bg-black/60 hidden z-[400] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-[2.5rem] p-8">
+            <h2 class="text-2xl font-black mb-4 italic">COVER PAGE DESIGN</h2>
+            <div class="space-y-3">
+                <input type="text" id="uniName" placeholder="University/School Name" class="w-full border p-3 rounded-xl">
+                <input type="text" id="assignTitle" placeholder="Assignment Title" class="w-full border p-3 rounded-xl">
+                <input type="text" id="stdName" placeholder="Student Name & ID" class="w-full border p-3 rounded-xl">
+                <button onclick="generateCover()" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold">Download Cover PDF</button>
+                <button onclick="closeModal('coverModal')" class="w-full text-slate-400 font-bold">Cancel</button>
             </div>
         </div>
     </div>
 
     <script>
+        // --- FIREBASE CONFIG (নিচের কি গুলো আপনার Firebase থেকে রিপ্লেস করুন) ---
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "YOUR_ID",
+            appId: "YOUR_APP_ID"
+        };
+        firebase.initializeApp(firebaseConfig);
+
+        const auth = firebase.auth();
+        const provider = new firebase.auth.GoogleAuthProvider();
+
         let balance = parseFloat(localStorage.getItem('m_bal')) || 0;
-        let tasks = JSON.parse(localStorage.getItem('m_tasks')) || [];
-        let routines = JSON.parse(localStorage.getItem('m_routines')) || [];
-        let currentRole = localStorage.getItem('m_role');
+        let role = localStorage.getItem('m_role');
 
-        function setRole(role) {
-            localStorage.setItem('m_role', role);
-            currentRole = role;
-            checkUI();
-        }
-
-        function resetRole() {
-            localStorage.removeItem('m_role');
-            location.reload();
-        }
-
-        function checkUI() {
-            if (!currentRole) {
-                document.getElementById('selectionScreen').classList.remove('hidden-section');
-                document.getElementById('mainDashboard').classList.add('hidden-section');
-            } else {
-                document.getElementById('selectionScreen').classList.add('hidden-section');
-                document.getElementById('mainDashboard').classList.remove('hidden-section');
-                document.getElementById('roleBadge').innerText = currentRole;
-                loadRoleFeatures();
-                updateUI();
-            }
-        }
-
-        function loadRoleFeatures() {
-            const container = document.getElementById('roleContent');
-            if (currentRole === 'student') {
-                container.innerHTML = `
-                    <div class="bg-blue-600 p-8 rounded-[2.5rem] text-white shadow-xl">
-                        <h2 class="text-2xl font-black italic uppercase mb-6 tracking-tighter">Student Portal</h2>
-                        <div class="space-y-4">
-                            <button onclick="toggleRoutine()" class="w-full bg-white text-blue-600 p-4 rounded-2xl font-bold flex justify-between items-center transition hover:bg-slate-100 shadow-lg">
-                                Class Routine <i class="fas fa-calendar"></i>
-                            </button>
-                            <button onclick="window.location.href='student-tool.html'" class="w-full bg-white/20 p-4 rounded-2xl font-bold flex justify-between items-center hover:bg-white/30">
-                                Assignment Cover <i class="fas fa-file-pdf"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            } else {
-                container.innerHTML = `
-                    <div class="bg-emerald-600 p-8 rounded-[2.5rem] text-white shadow-xl text-center">
-                        <h2 class="text-2xl font-black italic uppercase mb-2 tracking-tighter">Professional Portal</h2>
-                        <p class="text-xs opacity-70 mb-6">Manage your projects and financial statements</p>
-                        <i class="fas fa-briefcase text-6xl opacity-20 mb-6"></i>
-                        <button onclick="downloadStatement()" class="w-full bg-white text-emerald-600 py-4 rounded-2xl font-bold">GENERATE MONTHLY REPORT</button>
-                    </div>
-                `;
-            }
-        }
-
-        // --- Core Functions ---
-        function setBalance() {
-            let val = document.getElementById('initBalance').value;
-            if(val !== "") { balance = parseFloat(val); updateUI(); }
-        }
-
-        function scheduleTask() {
-            const amt = parseFloat(document.getElementById('expAmount').value);
-            const cat = document.getElementById('expCategory').value;
-            const date = document.getElementById('expDate').value;
-            if(!amt || !date) return;
-            tasks.push({ id: Date.now(), amount: amt, category: cat, targetTime: new Date(date).getTime(), displayTime: new Date(date).toLocaleString(), status: 'pending', notified: false });
-            updateUI();
-        }
-
-        function updateUI() {
-            document.getElementById('displayBalance').innerText = balance.toLocaleString('en-IN', {minimumFractionDigits: 2});
-            localStorage.setItem('m_bal', balance);
-            localStorage.setItem('m_tasks', JSON.stringify(tasks));
-            renderTasks();
-            renderRoutine();
-        }
-
-        function renderTasks() {
-            const list = document.getElementById('pendingList');
-            const pending = tasks.filter(t => t.status === 'pending');
-            list.innerHTML = pending.length ? "" : "<p class='text-slate-400 text-sm italic'>No tasks.</p>";
-            pending.forEach(t => {
-                list.innerHTML += `
-                    <div class="flex justify-between items-center bg-slate-50 p-4 rounded-2xl border">
-                        <div><p class="font-bold text-sm">${t.category}</p><p class="text-[9px] text-slate-400">${t.displayTime}</p></div>
-                        <div class="flex items-center gap-3">
-                            <span class="font-black text-rose-500">৳${t.amount}</span>
-                            <button onclick="approveTask(${t.id})" class="bg-indigo-600 text-white w-8 h-8 rounded-full"><i class="fas fa-check"></i></button>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
-        function approveTask(id) {
-            const idx = tasks.findIndex(t => t.id === id);
-            if(balance >= tasks[idx].amount) {
-                balance -= tasks[idx].amount;
-                tasks[idx].status = 'completed';
-                updateUI();
-            } else { alert("Insufficient balance!"); }
-        }
-
-        function toggleRoutine() { document.getElementById('routineModal').classList.toggle('hidden'); }
-
-        function addRoutine() {
-            const sub = document.getElementById('subject').value;
-            const time = document.getElementById('classTime').value;
-            const day = document.getElementById('day').value;
-            if(sub && time) {
-                routines.push({ id: Date.now(), sub, time, day });
-                localStorage.setItem('m_routines', JSON.stringify(routines));
-                renderRoutine();
-                document.getElementById('subject').value = "";
-            }
-        }
-
-        function renderRoutine() {
-            const box = document.getElementById('routineTable');
-            box.innerHTML = "";
-            routines.forEach(r => {
-                box.innerHTML += `<div class="bg-blue-50 p-3 rounded-xl flex justify-between text-xs"><span><b>${r.sub}</b> | ${r.day} ${r.time}</span><button onclick="delRoutine(${r.id})" class="text-rose-500"><i class="fas fa-trash"></i></button></div>`;
-            });
-        }
-
-        function delRoutine(id) {
-            routines = routines.filter(r => r.id !== id);
-            localStorage.setItem('m_routines', JSON.stringify(routines));
-            renderRoutine();
-        }
-
-        function downloadStatement() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.text("MANAGER EXPENSE REPORT", 14, 20);
-            const rows = tasks.filter(t => t.status === 'completed').map(t => [t.category, t.displayTime, t.amount]);
-            doc.autoTable({ startY: 30, head: [['Category', 'Time', 'Amount']], body: rows });
-            doc.save("statement.pdf");
-        }
-
-        function updateClock() {
-            const now = new Date();
-            document.getElementById('live-date').innerText = now.toDateString().toUpperCase();
-            document.getElementById('live-time').innerText = now.toLocaleTimeString();
-            tasks.forEach(t => {
-                if(t.status === 'pending' && !t.notified && now.getTime() >= t.targetTime) {
-                    new Notification("Task Due: " + t.category); t.notified = true; updateUI();
+        // --- Auth Functions ---
+        function googleLogin() {
+            auth.signInWithPopup(provider).then((result) => {
+                const user = result.user;
+                document.getElementById('userImg').src = user.photoURL;
+                document.getElementById('authScreen').classList.add('hidden-section');
+                if(!role) {
+                    document.getElementById('selectionScreen').classList.remove('hidden');
+                } else {
+                    initApp();
                 }
             });
         }
 
-        setInterval(updateClock, 1000);
-        checkUI();
+        function logout() {
+            auth.signOut().then(() => location.reload());
+        }
+
+        function setRole(r) {
+            localStorage.setItem('m_role', r);
+            role = r;
+            document.getElementById('selectionScreen').classList.add('hidden');
+            initApp();
+        }
+
+        function initApp() {
+            document.getElementById('mainDashboard').classList.remove('hidden-section');
+            renderDynamicPortal();
+            updateUI();
+        }
+
+        function setBalance() {
+            const val = document.getElementById('initBalance').value;
+            if(val) balance = parseFloat(val);
+            updateUI();
+        }
+
+        function updateUI() {
+            document.getElementById('displayBalance').innerText = balance.toLocaleString();
+            localStorage.setItem('m_bal', balance);
+        }
+
+        function renderDynamicPortal() {
+            const container = document.getElementById('dynamicPortal');
+            if(role === 'student') {
+                container.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div onclick="openModal('gpaModal')" class="bg-blue-600 p-8 rounded-[2rem] text-white cursor-pointer hover:scale-105 transition">
+                            <i class="fas fa-calculator text-4xl mb-4"></i>
+                            <h2 class="text-xl font-bold">GPA Calculator</h2>
+                            <p class="text-xs opacity-70">Calculate your semester result</p>
+                        </div>
+                        <div onclick="openModal('coverModal')" class="bg-indigo-600 p-8 rounded-[2rem] text-white cursor-pointer hover:scale-105 transition">
+                            <i class="fas fa-file-pdf text-4xl mb-4"></i>
+                            <h2 class="text-xl font-bold">Cover Page Generator</h2>
+                            <p class="text-xs opacity-70">Make professional assignment covers</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="bg-emerald-600 p-12 rounded-[2rem] text-white text-center">
+                        <i class="fas fa-briefcase text-6xl mb-6"></i>
+                        <h2 class="text-3xl font-black italic mb-2">Professional Dashboard</h2>
+                        <p class="mb-8 opacity-80 italic">Manage your daily statement and financials</p>
+                        <button onclick="downloadFullStatement()" class="bg-white text-emerald-600 px-8 py-4 rounded-2xl font-bold">DOWNLOAD REPORT</button>
+                    </div>
+                `;
+            }
+        }
+
+        // --- Feature Logics ---
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        function addGpaField() {
+            document.getElementById('gpaInputs').insertAdjacentHTML('beforeend', `
+                <div class="flex gap-2">
+                    <input type="text" placeholder="Subject" class="w-1/2 border p-2 rounded-lg">
+                    <input type="number" step="0.01" placeholder="Grade" class="w-1/2 border p-2 rounded-lg gpa-val">
+                </div>
+            `);
+        }
+
+        function calculateGpa() {
+            const grades = document.querySelectorAll('.gpa-val');
+            let total = 0, count = 0;
+            grades.forEach(g => {
+                if(g.value) { total += parseFloat(g.value); count++; }
+            });
+            document.getElementById('gpaResult').innerText = count > 0 ? (total / count).toFixed(2) : "0.00";
+        }
+
+        function generateCover() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const uni = document.getElementById('uniName').value;
+            const title = document.getElementById('assignTitle').value;
+            const name = document.getElementById('stdName').value;
+
+            doc.setFontSize(26); doc.text(uni.toUpperCase(), 105, 60, null, null, "center");
+            doc.setFontSize(16); doc.text("ASSIGNMENT ON", 105, 100, null, null, "center");
+            doc.setFontSize(22); doc.text(title, 105, 120, null, null, "center");
+            doc.setFontSize(14); doc.text("SUBMITTED BY", 105, 180, null, null, "center");
+            doc.text(name, 105, 195, null, null, "center");
+            doc.text("Date: " + new Date().toLocaleDateString(), 105, 210, null, null, "center");
+            
+            doc.save("Cover_Page.pdf");
+        }
+
+        auth.onAuthStateChanged(user => {
+            if(user) {
+                document.getElementById('userImg').src = user.photoURL;
+                document.getElementById('authScreen').classList.add('hidden-section');
+                if(!role) document.getElementById('selectionScreen').classList.remove('hidden');
+                else initApp();
+            }
+        });
     </script>
 </body>
 </html>
