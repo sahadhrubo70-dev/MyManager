@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manager Pro - Advanced Version</title>
+    <title>Manager Pro - Profession Update</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- PDF Generation Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
@@ -14,6 +13,9 @@
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         .hidden-section { display: none !important; }
         .active-tab { border-bottom: 4px solid white; opacity: 1 !important; }
+        .calc-btn { background: #f1f5f9; padding: 15px; border-radius: 12px; font-weight: 800; text-align: center; cursor: pointer; transition: 0.2s; }
+        .calc-btn:hover { background: #e2e8f0; }
+        .calc-btn-op { background: #4f46e5; color: white; }
     </style>
 </head>
 <body>
@@ -33,7 +35,7 @@
                 <input type="text" id="username" placeholder="Username" class="w-full bg-slate-50 border p-4 rounded-2xl outline-none">
                 <input type="password" id="password" placeholder="Password" class="w-full bg-slate-50 border p-4 rounded-2xl outline-none">
                 <button onclick="handleAuth()" id="authBtn" class="w-full bg-[#4f46e5] text-white py-4 rounded-2xl font-black">LOGIN</button>
-                <button onclick="toggleAuthMode()" id="toggleBtn" class="w-full text-xs font-bold text-slate-400 uppercase tracking-widest mt-2 text-center cursor-pointer">Create New Account</button>
+                <button onclick="toggleAuthMode()" id="toggleBtn" class="w-full text-xs font-bold text-slate-400 uppercase tracking-widest mt-2 text-center">Create New Account</button>
             </div>
         </div>
     </div>
@@ -45,61 +47,58 @@
                 <h1 class="text-xl font-black italic uppercase">Manager</h1>
                 <div class="flex items-center gap-4">
                     <span id="displayUserName" class="text-sm font-bold bg-white/20 px-3 py-1 rounded-lg uppercase">User</span>
-                    <button onclick="logout()" class="text-[10px] bg-rose-500 px-4 py-1.5 rounded-lg font-black uppercase cursor-pointer">Logout</button>
+                    <button onclick="logout()" class="text-[10px] bg-rose-500 px-4 py-1.5 rounded-lg font-black uppercase">Logout</button>
                 </div>
             </div>
             <div class="max-w-7xl mx-auto px-6 flex gap-8">
-                <button onclick="switchTab('expenseTab')" id="btnExpenseTab" class="py-3 text-sm font-bold opacity-60 active-tab uppercase tracking-widest cursor-pointer">Dashboard</button>
-                <button onclick="switchTab('portalTab')" id="btnPortalTab" class="py-3 text-sm font-bold opacity-60 uppercase tracking-widest cursor-pointer"><span id="portalTitle">Portal</span></button>
+                <button onclick="switchTab('expenseTab')" id="btnExpenseTab" class="py-3 text-sm font-bold opacity-60 active-tab uppercase tracking-widest">Dashboard</button>
+                <button onclick="switchTab('portalTab')" id="btnPortalTab" class="py-3 text-sm font-bold opacity-60 uppercase tracking-widest"><span id="portalTitle">Portal</span></button>
             </div>
         </nav>
 
-        <!-- Weather, Date & Day Bar -->
         <div class="bg-white border-b px-6 py-3 flex justify-between items-center text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-            <div id="weatherInfo"><i class="fas fa-location-dot"></i> Getting Location...</div>
-            <div id="dateTimeDayInfo"></div>
+            <div id="weatherInfo"><i class="fas fa-location-arrow mr-1"></i> Getting Location...</div>
+            <div id="dateTimeInfo"></div>
         </div>
 
         <div class="max-w-7xl mx-auto p-6 space-y-6">
-            
             <!-- DASHBOARD TAB -->
             <div id="expenseTab" class="space-y-6">
-                <!-- Balance & Quick Expense (Referencing image_e3e57b.png layout) -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
+                    <div class="bg-white p-8 rounded-[2rem] border shadow-sm">
                         <p class="text-slate-400 text-[10px] font-bold uppercase mb-2">Current Balance</p>
                         <h2 class="text-4xl font-black text-slate-800 mb-6">৳ <span id="mainBal">0.00</span></h2>
                         <div class="flex gap-2">
                             <input type="number" id="topupAmt" placeholder="Add Money" class="flex-1 border p-3 rounded-xl bg-slate-50 outline-none">
-                            <button onclick="updateBalance()" class="bg-emerald-500 text-white px-6 rounded-xl font-black cursor-pointer">Add</button>
+                            <button onclick="updateBalance()" class="bg-emerald-500 text-white px-6 rounded-xl font-black">Add</button>
                         </div>
                     </div>
 
-                    <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
+                    <div class="bg-white p-8 rounded-[2rem] border shadow-sm">
                         <p class="text-slate-400 text-[10px] font-bold uppercase mb-4">Add Quick Expense</p>
                         <div class="grid grid-cols-2 gap-3 mb-3">
                             <select id="expCategory" class="border p-3 rounded-xl bg-slate-50 font-bold text-sm outline-none">
-                                <option>Rent</option><option>Utility Bill</option><option>Education</option><option>EMI</option><option>Food</option>
+                                <option>Rent</option><option>Utility Bill</option><option>Professional Fee</option><option>Travel</option><option>Extra Cost</option>
                             </select>
                             <input type="number" id="expAmount" placeholder="Amount" class="border p-3 rounded-xl bg-slate-50 outline-none">
                             <input type="date" id="expDate" class="border p-3 rounded-xl bg-slate-50 text-sm outline-none">
                             <input type="text" id="expNote" placeholder="Note" class="border p-3 rounded-xl bg-slate-50 outline-none">
                         </div>
-                        <button onclick="addToReminder()" class="w-full bg-[#4f46e5] text-white py-3 rounded-xl font-black uppercase text-xs cursor-pointer">Add to Reminder</button>
+                        <button onclick="addToReminder()" class="w-full bg-[#4f46e5] text-white py-3 rounded-xl font-black uppercase text-xs">Add to Reminder</button>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="bg-indigo-50 p-6 rounded-[2rem] border border-indigo-100">
                         <h3 class="text-xs font-black uppercase text-indigo-600 mb-3 italic">Important Notes</h3>
-                        <textarea id="importantNote" oninput="saveNote()" class="w-full h-32 bg-transparent border-none outline-none text-sm text-indigo-900 placeholder-indigo-300" placeholder="Write your important information here..."></textarea>
+                        <textarea id="importantNote" oninput="saveNote()" class="w-full h-32 bg-transparent border-none outline-none text-sm text-indigo-900 placeholder-indigo-300" placeholder="Write information here..."></textarea>
                     </div>
-                    <div class="bg-white p-6 rounded-[2rem] shadow-sm">
-                        <h3 class="text-xs font-black uppercase text-orange-500 mb-4 tracking-widest">Pending (Reminders)</h3>
+                    <div class="bg-white p-6 rounded-[2rem] shadow-sm border">
+                        <h3 class="text-xs font-black uppercase text-orange-500 mb-4">Pending (Reminders)</h3>
                         <div id="reminderList" class="space-y-3"></div>
                     </div>
-                    <div class="bg-white p-6 rounded-[2rem] shadow-sm">
-                        <h3 class="text-xs font-black uppercase text-slate-400 mb-4 tracking-widest">Recent Transactions</h3>
+                    <div class="bg-white p-6 rounded-[2rem] shadow-sm border">
+                        <h3 class="text-xs font-black uppercase text-slate-400 mb-4">Recent (30 Days)</h3>
                         <div id="transList" class="space-y-3"></div>
                     </div>
                 </div>
@@ -112,58 +111,80 @@
         </div>
     </div>
 
-    <!-- MODALS -->
-    <!-- Routine Modal -->
-    <div id="routineModal" class="fixed inset-0 bg-black/60 hidden z-[200] flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-lg rounded-[2.5rem] p-8 overflow-y-auto max-h-[90vh]">
-            <h2 class="text-xl font-black mb-6 italic text-indigo-600 uppercase">Routine Manager</h2>
+    <!-- PROFESSION MODALS -->
+    <!-- Calculator Modal -->
+    <div id="calcModal" class="fixed inset-0 bg-black/60 hidden z-[200] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-6 shadow-2xl">
+            <h2 class="text-xl font-black mb-4 text-slate-800 uppercase italic">Calculator</h2>
+            <input type="text" id="calcDisplay" readonly class="w-full text-right text-3xl font-black p-4 bg-slate-100 rounded-2xl mb-4 border-none outline-none">
+            <div class="grid grid-cols-4 gap-2">
+                <div onclick="clearCalc()" class="calc-btn text-rose-500">C</div>
+                <div onclick="btnPush('/')" class="calc-btn calc-btn-op">/</div>
+                <div onclick="btnPush('*')" class="calc-btn calc-btn-op">*</div>
+                <div onclick="btnPush('-')" class="calc-btn calc-btn-op">-</div>
+                <div onclick="btnPush('7')" class="calc-btn">7</div>
+                <div onclick="btnPush('8')" class="calc-btn">8</div>
+                <div onclick="btnPush('9')" class="calc-btn">9</div>
+                <div onclick="btnPush('+')" class="calc-btn calc-btn-op row-span-2 flex items-center justify-center">+</div>
+                <div onclick="btnPush('4')" class="calc-btn">4</div>
+                <div onclick="btnPush('5')" class="calc-btn">5</div>
+                <div onclick="btnPush('6')" class="calc-btn">6</div>
+                <div onclick="btnPush('1')" class="calc-btn">1</div>
+                <div onclick="btnPush('2')" class="calc-btn">2</div>
+                <div onclick="btnPush('3')" class="calc-btn">3</div>
+                <div onclick="calculateResult()" class="calc-btn calc-btn-op bg-emerald-500">=</div>
+                <div onclick="btnPush('0')" class="calc-btn col-span-2">0</div>
+                <div onclick="btnPush('.')" class="calc-btn">.</div>
+                <button onclick="closeModal('calcModal')" class="col-span-4 mt-2 text-slate-300 font-bold text-[10px] uppercase">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Work Schedule Modal -->
+    <div id="scheduleModal" class="fixed inset-0 bg-black/60 hidden z-[200] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-[2.5rem] p-8 max-h-[90vh] overflow-y-auto">
+            <h2 class="text-xl font-black mb-6 text-emerald-600 uppercase italic">Work Schedule</h2>
             <div class="space-y-3 mb-6 bg-slate-50 p-4 rounded-2xl">
-                <input type="text" id="rtCourse" placeholder="Subject Name" class="w-full p-3 rounded-xl border">
-                <input type="text" id="rtCode" placeholder="Course Code" class="w-full p-3 rounded-xl border">
-                <input type="text" id="rtTeacher" placeholder="Teacher Name" class="w-full p-3 rounded-xl border">
+                <input type="text" id="schTask" placeholder="Task/Project Name" class="w-full p-3 rounded-xl border outline-none">
                 <div class="flex gap-2">
-                    <select id="rtDay" class="flex-1 p-3 rounded-xl border font-bold">
+                    <select id="schDay" class="flex-1 p-3 rounded-xl border font-bold">
                         <option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
                     </select>
-                    <input type="time" id="rtTime" class="flex-1 p-3 rounded-xl border font-bold">
+                    <input type="time" id="schTime" class="flex-1 p-3 rounded-xl border font-bold">
                 </div>
-                <button onclick="addRoutine()" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-black cursor-pointer uppercase text-xs">Save to Routine</button>
+                <button onclick="addSchedule()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-black uppercase">Add Schedule</button>
             </div>
-            <div id="routineDisplay" class="space-y-2"></div>
-            <button onclick="closeModal('routineModal')" class="w-full mt-4 text-slate-300 font-bold text-[10px] uppercase">Close</button>
+            <div id="scheduleDisplay" class="space-y-2"></div>
+            <button onclick="closeModal('scheduleModal')" class="w-full mt-4 text-slate-300 font-bold text-[10px] uppercase">Close</button>
         </div>
     </div>
 
-    <!-- GPA Modal -->
+    <!-- Reuse existing Student Modals (GPA, Cover) -->
     <div id="gpaModal" class="fixed inset-0 bg-black/60 hidden z-[200] flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl">
-            <h2 class="text-xl font-black mb-6 italic text-blue-600 uppercase">GPA Calculator</h2>
-            <div id="gpaInputs" class="space-y-3 mb-4 max-h-64 overflow-y-auto pr-2">
-                <div class="flex gap-2"><input type="number" step="0.01" class="gpa-val w-full p-3 rounded-xl border" placeholder="Grade Point (e.g 4.00)"></div>
+        <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8">
+            <h2 class="text-xl font-black mb-4 text-blue-600 italic uppercase">GPA Calculator</h2>
+            <div id="gpaInputs" class="space-y-2 mb-4">
+                <input type="number" step="0.01" class="gpa-val w-full p-3 rounded-xl border" placeholder="GP">
             </div>
-            <button onclick="addGpaField()" class="text-[10px] font-black text-blue-500 uppercase mb-4">+ Add Subject</button>
-            <div class="bg-slate-50 p-4 rounded-2xl text-center mb-4">
-                <p class="text-[10px] font-bold text-slate-400 uppercase">Result GPA</p>
-                <h3 id="gpaResult" class="text-3xl font-black text-slate-800">0.00</h3>
-            </div>
-            <button onclick="calculateGPA()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black uppercase text-xs mb-2">Calculate Now</button>
-            <button onclick="closeModal('gpaModal')" class="w-full text-slate-300 font-bold text-[10px] uppercase">Close</button>
+            <button onclick="addGpaField()" class="text-xs font-bold text-blue-500 mb-4 uppercase">+ Subject</button>
+            <button onclick="calculateGPA()" class="w-full bg-blue-600 text-white py-3 rounded-xl font-black uppercase mb-2">Calculate</button>
+            <div id="gpaResult" class="text-center text-2xl font-black"></div>
+            <button onclick="closeModal('gpaModal')" class="w-full mt-2 text-slate-300 font-bold text-[10px] uppercase">Close</button>
         </div>
     </div>
 
-    <!-- Cover & Index Modal -->
     <div id="coverModal" class="fixed inset-0 bg-black/60 hidden z-[200] flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl">
-            <h2 class="text-xl font-black mb-6 italic text-emerald-600 uppercase">Cover & Index Generator</h2>
-            <div class="space-y-3 mb-6">
-                <input type="text" id="cvUni" placeholder="University/School Name" class="w-full p-3 rounded-xl border">
-                <input type="text" id="cvTopic" placeholder="Assignment Topic" class="w-full p-3 rounded-xl border">
+        <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8">
+            <h2 class="text-xl font-black mb-6 text-indigo-600 italic uppercase">Cover & Index</h2>
+            <div class="space-y-3">
+                <input type="text" id="cvUni" placeholder="Organization Name" class="w-full p-3 rounded-xl border">
+                <input type="text" id="cvTopic" placeholder="Topic Name" class="w-full p-3 rounded-xl border">
                 <input type="text" id="cvName" placeholder="Your Name" class="w-full p-3 rounded-xl border">
-                <textarea id="cvIndexItems" placeholder="Index Topics (Comma separated: Intro, Body, Conclusion)" class="w-full p-3 rounded-xl border h-20"></textarea>
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-                <button onclick="generatePDF('cover')" class="bg-emerald-600 text-white py-3 rounded-xl font-black text-[10px] uppercase">Gen Cover</button>
-                <button onclick="generatePDF('index')" class="bg-slate-800 text-white py-3 rounded-xl font-black text-[10px] uppercase">Gen Index</button>
+                <textarea id="cvIndexItems" placeholder="Index Topics (Comma separated)" class="w-full p-3 rounded-xl border h-20"></textarea>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="generatePDF('cover')" class="bg-indigo-600 text-white py-3 rounded-xl font-black text-xs uppercase">Cover</button>
+                    <button onclick="generatePDF('index')" class="bg-slate-800 text-white py-3 rounded-xl font-black text-xs uppercase">Index</button>
+                </div>
             </div>
             <button onclick="closeModal('coverModal')" class="w-full mt-4 text-slate-300 font-bold text-[10px] uppercase">Close</button>
         </div>
@@ -173,40 +194,27 @@
         let balance = parseFloat(localStorage.getItem('m_bal')) || 0;
         let expenses = JSON.parse(localStorage.getItem('m_expenses')) || [];
         let reminders = JSON.parse(localStorage.getItem('m_reminders')) || [];
+        let schedules = JSON.parse(localStorage.getItem('m_schedules')) || [];
         let routines = JSON.parse(localStorage.getItem('m_routines')) || [];
         let userRole = "";
 
-        // NOTIFICATION PERMISSION
-        function requestNotifyPermission() {
-            if ("Notification" in window) {
-                Notification.requestPermission();
-            }
-        }
-
-        // AUTH LOGIC
-        function toggleAuthMode() {
-            document.getElementById('regFields').classList.toggle('hidden-section');
-            document.getElementById('authBtn').innerText = document.getElementById('regFields').classList.contains('hidden-section') ? "LOGIN" : "SIGN UP";
-        }
-
+        // AUTH & APP START
         function handleAuth() {
             const u = document.getElementById('username').value;
             const p = document.getElementById('password').value;
             const isReg = !document.getElementById('regFields').classList.contains('hidden-section');
-
             if(isReg) {
                 const n = document.getElementById('fullName').value;
                 const r = document.getElementById('userRole').value;
                 localStorage.setItem(`user_${u}`, JSON.stringify({name: n, pass: p, role: r}));
-                alert("Account Created! Please Login.");
                 toggleAuthMode();
             } else {
                 const data = JSON.parse(localStorage.getItem(`user_${u}`));
                 if(data && data.pass === p) {
                     localStorage.setItem('active_session', u);
-                    requestNotifyPermission();
+                    if("Notification" in window) Notification.requestPermission();
                     startApp(data);
-                } else alert("Invalid Credentials");
+                } else alert("Error");
             }
         }
 
@@ -216,148 +224,77 @@
             document.getElementById('mainApp').classList.remove('hidden-section');
             document.getElementById('displayUserName').innerText = `${data.name} (${data.role})`;
             document.getElementById('portalTitle').innerText = userRole === 'student' ? "STUDENT PORTAL" : "PROFESSION PORTAL";
-            document.getElementById('importantNote').value = localStorage.getItem('m_note') || "";
             
-            cleanOldTransactions();
+            autoCleanExpenses();
             renderUI();
             renderPortal();
-            updateWeather();
-            startTime();
-            startNotificationService();
+            startServices();
         }
 
-        // WEATHER & DATE (Location Based)
-        function updateWeather() {
-            navigator.geolocation.getCurrentPosition(pos => {
-                const lat = pos.coords.latitude;
-                const lon = pos.coords.longitude;
-                fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`)
-                .then(r => r.json())
-                .then(d => {
-                    document.getElementById('weatherInfo').innerHTML = `<i class="fas fa-sun text-yellow-500"></i> ${d.current_weather.temperature}°C | Your Location`;
-                });
-            }, () => {
-                document.getElementById('weatherInfo').innerText = "Location Denied";
-            });
-        }
-
-        function startTime() {
-            setInterval(() => {
-                const now = new Date();
-                const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-                const timeStr = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second: '2-digit'});
-                const dateStr = now.toLocaleDateString();
-                document.getElementById('dateTimeDayInfo').innerText = `${days[now.getDay()]} | ${dateStr} | ${timeStr}`;
-            }, 1000);
-        }
-
-        // TRANSACTION CLEANUP (30 Days)
-        function cleanOldTransactions() {
-            const now = new Date().getTime();
+        function autoCleanExpenses() {
             const thirtyDays = 30 * 24 * 60 * 60 * 1000;
-            expenses = expenses.filter(ex => (now - new Date(ex.payDate).getTime()) < thirtyDays);
+            const now = Date.now();
+            expenses = expenses.filter(e => (now - new Date(e.payDate).getTime()) < thirtyDays);
             localStorage.setItem('m_expenses', JSON.stringify(expenses));
         }
 
-        // NOTIFICATION SERVICE (Checks every 30 seconds)
-        function startNotificationService() {
+        function startServices() {
             setInterval(() => {
                 const now = new Date();
-                const currentDay = now.toLocaleString('en-us', {weekday: 'long'});
-                const currentTime = now.getHours() * 60 + now.getMinutes();
-
-                routines.forEach(r => {
-                    if(r.day === currentDay) {
-                        const [h, m] = r.time.split(':');
-                        const classTime = parseInt(h) * 60 + parseInt(m);
-                        if(classTime - currentTime === 45) {
-                            if (Notification.permission === "granted") {
-                                new Notification("Class Alert!", { body: `Your ${r.course} class starts in 45 minutes.` });
+                const day = now.toLocaleString('en-us', {weekday: 'long'});
+                const timeStr = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second: '2-digit'});
+                document.getElementById('dateTimeInfo').innerText = `${day} | ${now.toLocaleDateString()} | ${timeStr}`;
+                
+                // Pro Notification Engine
+                const currentMinutes = now.getHours() * 60 + now.getMinutes();
+                const list = userRole === 'student' ? routines : schedules;
+                list.forEach(item => {
+                    if(item.day === day) {
+                        const [h, m] = item.time.split(':');
+                        const targetMinutes = parseInt(h) * 60 + parseInt(m);
+                        if(targetMinutes - currentMinutes === 45) {
+                            if(Notification.permission === "granted") {
+                                new Notification("Reminder Alert!", { body: `${item.task || item.course} in 45 min!` });
                             }
                         }
                     }
                 });
-            }, 30000);
+            }, 1000);
+
+            navigator.geolocation.getCurrentPosition(pos => {
+                fetch(`https://api.open-meteo.com/v1/forecast?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}&current_weather=true`)
+                .then(r => r.json()).then(d => {
+                    document.getElementById('weatherInfo').innerHTML = `<i class="fas fa-sun text-yellow-500"></i> ${d.current_weather.temperature}°C | Your Location`;
+                });
+            });
         }
 
-        // STUDENT PORTAL TOOLS
-        function addGpaField() {
-            document.getElementById('gpaInputs').insertAdjacentHTML('beforeend', '<input type="number" step="0.01" class="gpa-val w-full p-3 rounded-xl border" placeholder="Grade Point">');
-        }
-        function calculateGPA() {
-            const inputs = document.querySelectorAll('.gpa-val');
-            let sum = 0, count = 0;
-            inputs.forEach(i => { if(i.value) { sum += parseFloat(i.value); count++; } });
-            document.getElementById('gpaResult').innerText = count > 0 ? (sum / count).toFixed(2) : "0.00";
+        // CALCULATOR LOGIC
+        function btnPush(v) { document.getElementById('calcDisplay').value += v; }
+        function clearCalc() { document.getElementById('calcDisplay').value = ""; }
+        function calculateResult() {
+            try { document.getElementById('calcDisplay').value = eval(document.getElementById('calcDisplay').value); }
+            catch { document.getElementById('calcDisplay').value = "Error"; }
         }
 
-        function generatePDF(type) {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            const uni = document.getElementById('cvUni').value;
-            const topic = document.getElementById('cvTopic').value;
-            const name = document.getElementById('cvName').value;
-
-            if(type === 'cover') {
-                doc.setFontSize(22); doc.text(uni.toUpperCase(), 105, 50, null, null, "center");
-                doc.setFontSize(16); doc.text("ASSIGNMENT", 105, 90, null, null, "center");
-                doc.setFontSize(14); doc.text("Topic: " + topic, 105, 110, null, null, "center");
-                doc.text("Submitted By: " + name, 105, 200, null, null, "center");
-            } else {
-                doc.text("INDEX / TABLE OF CONTENTS", 105, 20, null, null, "center");
-                const items = document.getElementById('cvIndexItems').value.split(',').map((item, i) => [i+1, item.trim(), '____']);
-                doc.autoTable({ head: [['SL', 'Topic', 'Page']], body: items, startY: 40 });
-            }
-            doc.save(`${type}.pdf`);
+        // WORK SCHEDULE LOGIC
+        function addSchedule() {
+            const task = document.getElementById('schTask').value;
+            const day = document.getElementById('schDay').value;
+            const time = document.getElementById('schTime').value;
+            if(!task || !time) return;
+            schedules.push({ task, day, time });
+            localStorage.setItem('m_schedules', JSON.stringify(schedules));
+            renderScheduleList();
         }
-
-        // GENERAL UI FUNCTIONS
-        function addToReminder() {
-            const cat = document.getElementById('expCategory').value;
-            const amt = parseFloat(document.getElementById('expAmount').value);
-            const date = document.getElementById('expDate').value;
-            const note = document.getElementById('expNote').value;
-            if(!amt || !date) return alert("Fill all fields");
-
-            reminders.push({ id: Date.now(), cat, amt, date, note });
-            localStorage.setItem('m_reminders', JSON.stringify(reminders));
-            renderUI();
-        }
-
-        function payNow(id) {
-            const idx = reminders.findIndex(r => r.id === id);
-            const item = reminders[idx];
-            if(item.amt > balance) return alert("Low Balance!");
-            
-            balance -= item.amt;
-            expenses.unshift({...item, payDate: new Date().toISOString()});
-            reminders.splice(idx, 1);
-            localStorage.setItem('m_bal', balance);
-            localStorage.setItem('m_expenses', JSON.stringify(expenses));
-            localStorage.setItem('m_reminders', JSON.stringify(reminders));
-            renderUI();
-        }
-
-        function renderUI() {
-            document.getElementById('mainBal').innerText = balance.toLocaleString();
-            document.getElementById('reminderList').innerHTML = reminders.map(r => `
-                <div class="bg-orange-50 p-3 rounded-xl border border-orange-100 flex justify-between items-center">
-                    <div class="text-[9px] font-bold">
-                        <span class="text-orange-600">${r.cat}</span><br>${r.date} | ${r.note}
-                    </div>
-                    <div class="text-right">
-                        <p class="font-black text-xs">৳${r.amt}</p>
-                        <button onclick="payNow(${r.id})" class="bg-orange-500 text-white px-2 py-1 rounded text-[8px] font-black uppercase cursor-pointer">Pay Done</button>
-                    </div>
-                </div>`).join('');
-            
-            document.getElementById('transList').innerHTML = expenses.map(e => `
-                <div class="border-b pb-2 flex justify-between items-center">
-                    <div class="text-[9px] font-bold">${e.cat}<br><small class="text-slate-300">${new Date(e.payDate).toLocaleDateString()}</small></div>
-                    <span class="text-rose-500 font-black text-xs">-৳${e.amt}</span>
+        function renderScheduleList() {
+            document.getElementById('scheduleDisplay').innerHTML = schedules.map(s => `
+                <div class="bg-white p-3 border rounded-xl flex justify-between font-bold text-[10px]">
+                    <span>${s.task}</span><span class="text-emerald-600">${s.day} @ ${s.time}</span>
                 </div>`).join('');
         }
 
+        // PORTAL RENDERING (Referencing image_e3d29a.png & image_80e927.png)
         function renderPortal() {
             const grid = document.getElementById('portalGrid');
             if(userRole === 'student') {
@@ -367,44 +304,47 @@
                     <div onclick="openModal('coverModal')" class="bg-indigo-600 p-8 rounded-[2rem] text-white shadow-lg cursor-pointer font-black italic">COVER & INDEX</div>`;
             } else {
                 grid.innerHTML = `
-                    <div onclick="alert('Calc Opened')" class="bg-slate-800 p-8 rounded-[2rem] text-white shadow-lg cursor-pointer font-black italic">CALCULATOR</div>
-                    <div onclick="alert('Schedule Opened')" class="bg-emerald-600 p-8 rounded-[2rem] text-white shadow-lg cursor-pointer font-black italic">WORK SCHEDULE</div>
-                    <div onclick="openModal('coverModal')" class="bg-indigo-600 p-8 rounded-[2rem] text-white shadow-lg cursor-pointer font-black italic">COVER & INDEX</div>`;
+                    <div onclick="openModal('calcModal')" class="bg-[#1e293b] p-8 rounded-[2rem] text-white shadow-lg cursor-pointer font-black italic uppercase">Calculator</div>
+                    <div onclick="openModal('scheduleModal')" class="bg-[#059669] p-8 rounded-[2rem] text-white shadow-lg cursor-pointer font-black italic uppercase">Work Schedule</div>
+                    <div onclick="openModal('coverModal')" class="bg-[#4f46e5] p-8 rounded-[2rem] text-white shadow-lg cursor-pointer font-black italic uppercase">Cover & Index</div>`;
             }
         }
 
-        function addRoutine() {
-            const r = {
-                course: document.getElementById('rtCourse').value,
-                code: document.getElementById('rtCode').value,
-                teacher: document.getElementById('rtTeacher').value,
-                day: document.getElementById('rtDay').value,
-                time: document.getElementById('rtTime').value
-            };
-            if(!r.course || !r.time) return;
-            routines.push(r);
-            localStorage.setItem('m_routines', JSON.stringify(routines));
-            renderRoutineList();
-        }
-
-        function renderRoutineList() {
-            document.getElementById('routineDisplay').innerHTML = routines.map(r => `
-                <div class="text-[10px] bg-white p-3 rounded-xl border flex justify-between font-bold">
-                    <span>${r.course} (${r.code})<br><small>${r.teacher}</small></span>
-                    <span class="text-indigo-600 text-right">${r.day}<br>${r.time}</span>
-                </div>`).join('');
-        }
-
+        // SHARED UI FUNCTIONS
         function updateBalance() { const v = parseFloat(document.getElementById('topupAmt').value); if(v) balance += v; localStorage.setItem('m_bal', balance); renderUI(); document.getElementById('topupAmt').value = ""; }
+        function addToReminder() {
+            const cat = document.getElementById('expCategory').value;
+            const amt = parseFloat(document.getElementById('expAmount').value);
+            const date = document.getElementById('expDate').value;
+            if(!amt || !date) return;
+            reminders.push({ id: Date.now(), cat, amt, date });
+            localStorage.setItem('m_reminders', JSON.stringify(reminders));
+            renderUI();
+        }
+        function payNow(id) {
+            const idx = reminders.findIndex(r => r.id === id);
+            if(reminders[idx].amt > balance) return alert("Low Balance");
+            balance -= reminders[idx].amt;
+            expenses.unshift({...reminders[idx], payDate: new Date().toISOString()});
+            reminders.splice(idx, 1);
+            localStorage.setItem('m_bal', balance); localStorage.setItem('m_expenses', JSON.stringify(expenses)); localStorage.setItem('m_reminders', JSON.stringify(reminders));
+            renderUI();
+        }
+        function renderUI() {
+            document.getElementById('mainBal').innerText = balance.toLocaleString();
+            document.getElementById('reminderList').innerHTML = reminders.map(r => `<div class="bg-orange-50 p-3 rounded-xl border flex justify-between items-center"><div class="text-[9px] font-bold">${r.cat}<br>${r.date}</div><div class="text-right"><p class="font-black text-xs">৳${r.amt}</p><button onclick="payNow(${r.id})" class="bg-orange-500 text-white px-2 py-0.5 rounded text-[8px] font-black uppercase">Pay Done</button></div></div>`).join('');
+            document.getElementById('transList').innerHTML = expenses.map(e => `<div class="border-b pb-2 flex justify-between items-center"><div class="text-[9px] font-bold">${e.cat}<br><small class="text-slate-300">${new Date(e.payDate).toLocaleDateString()}</small></div><span class="text-rose-500 font-black text-xs">-৳${e.amt}</span></div>`).join('');
+        }
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); if(id==='scheduleModal') renderScheduleList(); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+        function toggleAuthMode() { document.getElementById('regFields').classList.toggle('hidden-section'); }
+        function logout() { localStorage.removeItem('active_session'); location.reload(); }
         function saveNote() { localStorage.setItem('m_note', document.getElementById('importantNote').value); }
         function switchTab(id) { document.getElementById('expenseTab').classList.add('hidden-section'); document.getElementById('portalTab').classList.add('hidden-section'); document.getElementById(id).classList.remove('hidden-section'); document.getElementById('btnExpenseTab').classList.remove('active-tab'); document.getElementById('btnPortalTab').classList.remove('active-tab'); document.getElementById('btn' + id.charAt(0).toUpperCase() + id.slice(1)).classList.add('active-tab'); }
-        function openModal(id) { document.getElementById(id).classList.remove('hidden'); if(id === 'routineModal') renderRoutineList(); }
-        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-        function logout() { localStorage.removeItem('active_session'); location.reload(); }
 
         window.onload = () => {
-            const session = localStorage.getItem('active_session');
-            if(session) startApp(JSON.parse(localStorage.getItem(`user_${session}`)));
+            const s = localStorage.getItem('active_session');
+            if(s) startApp(JSON.parse(localStorage.getItem(`user_${s}`)));
         };
     </script>
 </body>
