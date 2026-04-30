@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manager Pro - Hybrid Dashboard</title>
+    <title>Manager Pro - Complete Solution</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- PDF Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
@@ -13,23 +14,32 @@
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         .hidden-section { display: none !important; }
         .active-tab { border-bottom: 4px solid white; opacity: 1 !important; }
-        .captcha-box { user-select: none; letter-spacing: 5px; font-weight: 900; background: #e2e8f0; border-radius: 8px; }
+        .captcha-box { user-select: none; letter-spacing: 5px; font-weight: 900; background: #e2e8f0; padding: 10px; border-radius: 8px; text-align: center; }
     </style>
 </head>
-<body class="min-h-screen">
+<body>
 
     <!-- 1. AUTH SCREEN -->
     <div id="authScreen" class="fixed inset-0 bg-[#4f46e5] z-[500] flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-md rounded-[2.5rem] p-10 shadow-2xl">
+        <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl overflow-y-auto max-h-[95vh]">
             <h1 class="text-3xl font-black italic text-[#4f46e5] text-center mb-6 uppercase">Manager</h1>
             <div id="authForm" class="space-y-4">
-                <div id="regFields" class="hidden-section"><input type="text" id="fullName" placeholder="Full Name" class="w-full bg-slate-50 border p-4 rounded-2xl outline-none"></div>
+                <div id="regFields" class="hidden-section space-y-4">
+                    <input type="text" id="fullName" placeholder="Full Name" class="w-full bg-slate-50 border p-4 rounded-2xl outline-none">
+                    <select id="userRole" class="w-full bg-slate-50 border p-4 rounded-2xl outline-none font-bold text-slate-500">
+                        <option value="">Select Your Role</option>
+                        <option value="student">Student</option>
+                        <option value="pro">Professional</option>
+                    </select>
+                </div>
                 <input type="text" id="username" placeholder="Username" class="w-full bg-slate-50 border p-4 rounded-2xl outline-none">
                 <input type="password" id="password" placeholder="Password" class="w-full bg-slate-50 border p-4 rounded-2xl outline-none">
-                <div class="flex items-center gap-4 bg-slate-100 p-3 rounded-2xl">
-                    <div id="captchaDisplay" class="captcha-box px-4 py-2 text-indigo-600 italic"></div>
-                    <input type="text" id="captchaInput" placeholder="Verify" class="flex-1 p-2 rounded-xl border-none outline-none text-center font-bold">
+                
+                <div class="bg-slate-100 p-3 rounded-2xl">
+                    <div id="captchaDisplay" class="captcha-box text-indigo-600 mb-2"></div>
+                    <input type="text" id="captchaInput" placeholder="Verify Captcha" class="w-full p-2 rounded-xl border-none outline-none text-center font-bold">
                 </div>
+                
                 <button onclick="handleAuth()" id="authBtn" class="w-full bg-[#4f46e5] text-white py-4 rounded-2xl font-black shadow-lg">LOGIN</button>
                 <button onclick="toggleAuthMode()" id="toggleBtn" class="w-full text-xs font-bold text-slate-400 uppercase tracking-widest">Create New Account</button>
             </div>
@@ -38,115 +48,139 @@
 
     <!-- 2. MAIN APP -->
     <div id="mainApp" class="hidden-section">
-        <!-- Header & Tabs -->
         <nav class="bg-[#4f46e5] text-white shadow-xl sticky top-0 z-[100]">
             <div class="max-w-7xl mx-auto px-6 pt-6 pb-2 flex justify-between items-center">
                 <h1 class="text-xl font-black italic tracking-tighter uppercase">Manager</h1>
                 <div class="flex items-center gap-4">
-                    <span id="displayUserName" class="text-sm font-bold opacity-80">User</span>
-                    <button onclick="logout()" class="text-[10px] bg-white/20 px-4 py-1.5 rounded-lg font-black uppercase">Logout</button>
+                    <span id="displayUserName" class="text-sm font-bold bg-white/20 px-3 py-1 rounded-lg">User</span>
+                    <button onclick="logout()" class="text-[10px] bg-rose-500 px-4 py-1.5 rounded-lg font-black uppercase">Logout</button>
                 </div>
             </div>
-            <!-- Tab Switcher (Inspired by your requirement) -->
             <div class="max-w-7xl mx-auto px-6 flex gap-8">
                 <button onclick="switchTab('expenseTab')" id="btnExpenseTab" class="py-3 text-sm font-bold opacity-60 active-tab uppercase tracking-widest">Dashboard</button>
                 <button onclick="switchTab('studentTab')" id="btnStudentTab" class="py-3 text-sm font-bold opacity-60 uppercase tracking-widest">Student Portal</button>
             </div>
         </nav>
 
-        <div class="max-w-7xl mx-auto p-6 md:p-10">
-            
-            <!-- TAB 1: EXPENSE & MAIN DASHBOARD -->
-            <div id="expenseTab" class="space-y-8 animate-fade-in">
+        <div class="max-w-7xl mx-auto p-6 space-y-8">
+            <!-- TAB 1: DASHBOARD & REMINDERS -->
+            <div id="expenseTab" class="space-y-8">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <!-- Balance Card -->
-                    <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+                    <!-- Balance -->
+                    <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
                         <p class="text-slate-400 text-[10px] font-bold uppercase mb-2">Current Balance</p>
-                        <h2 class="text-4xl font-black text-slate-800 mb-6">৳ <span id="mainBal">0.00</span></h2>
-                        <input type="number" id="topupAmt" placeholder="Add Money" class="w-full border p-3 rounded-xl bg-slate-50 mb-2">
-                        <button onclick="updateBalance()" class="w-full bg-emerald-500 text-white py-2 rounded-xl font-bold">Add Funds</button>
-                    </div>
-
-                    <!-- Summary Card -->
-                    <div class="bg-[#4f46e5] p-8 rounded-[2.5rem] text-white shadow-xl flex flex-col justify-between">
-                        <div>
-                            <p class="text-white/60 text-[10px] font-bold uppercase">Monthly Spent</p>
-                            <h2 class="text-4xl font-black">৳ <span id="totalSpent">0.00</span></h2>
+                        <h2 class="text-3xl font-black text-slate-800 mb-4">৳ <span id="mainBal">0.00</span></h2>
+                        <div class="flex gap-2">
+                            <input type="number" id="topupAmt" placeholder="Amount" class="w-full border p-2 rounded-xl bg-slate-50 text-sm">
+                            <button onclick="updateBalance()" class="bg-emerald-500 text-white px-4 rounded-xl font-bold text-xs">Add</button>
                         </div>
-                        <button onclick="downloadStatement()" class="bg-white text-indigo-600 py-3 rounded-2xl font-black text-xs mt-4">Download Statement</button>
                     </div>
 
-                    <!-- Quick Add Expense -->
-                    <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
-                        <p class="text-slate-400 text-[10px] font-bold uppercase mb-4">Quick Expense</p>
-                        <input type="text" id="expNote" placeholder="Note" class="w-full border p-3 rounded-xl bg-slate-50 mb-2 outline-none">
-                        <input type="number" id="expAmount" placeholder="Amount" class="w-full border p-3 rounded-xl bg-slate-50 mb-2 outline-none">
-                        <button onclick="addExpense()" class="w-full bg-rose-500 text-white py-3 rounded-xl font-bold">Pay Now</button>
+                    <!-- Expenses Entry -->
+                    <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 md:col-span-2">
+                        <p class="text-slate-400 text-[10px] font-bold uppercase mb-4 tracking-widest">Add Quick Expense</p>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <select id="expCategory" class="border p-3 rounded-xl bg-slate-50 text-sm font-bold">
+                                <option value="Rent">Rent</option>
+                                <option value="Utility Bill">Utility Bill</option>
+                                <option value="Semester Fee">Semester Fee</option>
+                                <option value="EMI">EMI</option>
+                                <option value="Extra Expense">Extra Expense</option>
+                            </select>
+                            <input type="number" id="expAmount" placeholder="Amount" class="border p-3 rounded-xl bg-slate-50 text-sm">
+                            <input type="text" id="expNote" placeholder="Note (Optional)" class="border p-3 rounded-xl bg-slate-50 text-sm">
+                            <button onclick="addExpense()" class="bg-rose-500 text-white py-3 rounded-xl font-black md:col-span-3">Pay Now</button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Recent Transactions -->
-                <div class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
-                    <h3 class="text-lg font-black mb-6 italic uppercase text-slate-700">Recent Transactions</h3>
-                    <div id="transList" class="space-y-4">
-                        <!-- Transactions will appear here -->
+                <!-- Reminder & Transactions -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-sm font-black italic uppercase text-orange-500">Reminders</h3>
+                            <button onclick="openModal('reminderModal')" class="text-[10px] font-bold text-blue-600 underline">Add New</button>
+                        </div>
+                        <div id="reminderList" class="space-y-2 text-xs"></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
+                        <h3 class="text-sm font-black italic uppercase text-slate-700 mb-4">Recent Transactions</h3>
+                        <div id="transList" class="space-y-2 text-xs"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- TAB 2: STUDENT PORTAL (As per image_e54e1a.png) -->
+            <!-- TAB 2: STUDENT PORTAL -->
             <div id="studentTab" class="hidden-section space-y-8">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <!-- GPA Card -->
-                    <div onclick="openModal('gpaModal')" class="bg-blue-600 p-12 rounded-[2.5rem] text-white shadow-xl cursor-pointer transform hover:scale-105 transition-all">
-                        <i class="fas fa-calculator text-5xl mb-6"></i>
-                        <h2 class="text-3xl font-black italic mb-2">GPA CALCULATOR</h2>
-                        <p class="text-sm opacity-80 italic">Check your academic results</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div onclick="openModal('gpaModal')" class="bg-blue-600 p-8 rounded-[2rem] text-white shadow-xl cursor-pointer">
+                        <i class="fas fa-calculator text-3xl mb-4"></i>
+                        <h2 class="text-xl font-black italic uppercase">GPA Calculator</h2>
                     </div>
-                    <!-- Student Tools -->
-                    <div class="bg-[#6366f1] p-12 rounded-[2.5rem] text-white shadow-xl">
-                        <h2 class="text-2xl font-black italic mb-6">STUDENT TOOLS</h2>
-                        <div class="space-y-4">
-                            <button onclick="openModal('routineModal')" class="w-full bg-white text-indigo-600 py-4 rounded-2xl font-black">Class Routine</button>
-                            <button onclick="openModal('docModal')" class="w-full bg-white/20 text-white py-4 rounded-2xl font-black">Assignment Cover/Index</button>
-                        </div>
+                    <div onclick="openModal('coverModal')" class="bg-indigo-600 p-8 rounded-[2rem] text-white shadow-xl cursor-pointer">
+                        <i class="fas fa-file-pdf text-3xl mb-4"></i>
+                        <h2 class="text-xl font-black italic uppercase">Cover & Index</h2>
+                    </div>
+                    <div onclick="openModal('routineModal')" class="bg-purple-600 p-8 rounded-[2rem] text-white shadow-xl cursor-pointer">
+                        <i class="fas fa-calendar-alt text-3xl mb-4"></i>
+                        <h2 class="text-xl font-black italic uppercase">Class Routine</h2>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- MODALS (GPA, Routine, etc.) -->
-    <div id="gpaModal" class="fixed inset-0 bg-black/60 hidden z-[200] flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-white w-full max-w-md rounded-[2.5rem] p-10">
-            <h2 class="text-2xl font-black italic mb-6 text-indigo-600">GPA CALCULATOR</h2>
-            <div id="gpaInputs" class="space-y-2 mb-4">
-                <input type="number" step="0.01" class="w-full border p-4 rounded-2xl gpa-val" placeholder="Enter Grade Point">
+    <!-- MODALS -->
+    <!-- Reminder Modal -->
+    <div id="reminderModal" class="fixed inset-0 bg-black/60 hidden z-[200] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-[2rem] p-8">
+            <h2 class="font-black mb-4">Add Reminder</h2>
+            <input type="text" id="remTask" placeholder="Task Name" class="w-full border p-3 rounded-xl mb-2">
+            <input type="date" id="remDate" class="w-full border p-3 rounded-xl mb-4">
+            <button onclick="addReminder()" class="w-full bg-orange-500 text-white py-3 rounded-xl font-bold">Set Reminder</button>
+            <button onclick="closeModal('reminderModal')" class="w-full text-xs text-slate-400 mt-2">Close</button>
+        </div>
+    </div>
+
+    <!-- Cover & Index Modal -->
+    <div id="coverModal" class="fixed inset-0 bg-black/60 hidden z-[200] flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-lg rounded-[2.5rem] p-10 overflow-y-auto max-h-[90vh]">
+            <div class="flex gap-4 mb-6">
+                <button onclick="switchDoc('cover')" id="tabCover" class="flex-1 py-2 font-bold border-b-4 border-indigo-600">Cover Page</button>
+                <button onclick="switchDoc('index')" id="tabIndex" class="flex-1 py-2 font-bold border-slate-200 border-b-4">Index Page</button>
             </div>
-            <button onclick="addGpaInput()" class="text-indigo-500 font-bold text-xs mb-6">+ Add Subject</button>
-            <button onclick="calcGpa()" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black">CALCULATE</button>
-            <p id="gpaFinal" class="text-4xl font-black text-center mt-6"></p>
-            <button onclick="closeModal('gpaModal')" class="w-full text-slate-300 font-bold mt-4 uppercase text-[10px]">Close Window</button>
+            <div class="space-y-4">
+                <input type="text" id="docUni" placeholder="Institution Name" class="w-full border p-3 rounded-xl">
+                <input type="text" id="docTitle" placeholder="Assignment Topic" class="w-full border p-3 rounded-xl">
+                <input type="text" id="docName" placeholder="Student Name & ID" class="w-full border p-3 rounded-xl">
+                <div id="indexFields" class="hidden-section">
+                    <textarea id="indexData" placeholder="Topic 1, Topic 2, Topic 3 (Separate with comma)" class="w-full border p-3 rounded-xl h-24"></textarea>
+                </div>
+                <button onclick="generatePDF()" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black">Generate PDF</button>
+                <button onclick="closeModal('coverModal')" class="w-full text-slate-400 text-xs">Close</button>
+            </div>
         </div>
     </div>
 
     <script>
-        let isLoginMode = true;
+        let isLogin = true;
         let captchaVal = "";
         let balance = parseFloat(localStorage.getItem('m_bal')) || 0;
         let expenses = JSON.parse(localStorage.getItem('m_expenses')) || [];
+        let reminders = JSON.parse(localStorage.getItem('m_reminders')) || [];
+        let currentDocType = 'cover';
 
-        // --- AUTH & CAPTCHA ---
+        // --- AUTH & INITIAL ---
         function generateCaptcha() {
             captchaVal = Math.random().toString(36).substring(2, 7).toUpperCase();
             document.getElementById('captchaDisplay').innerText = captchaVal;
         }
 
         function toggleAuthMode() {
-            isLoginMode = !isLoginMode;
+            isLogin = !isLogin;
             document.getElementById('regFields').classList.toggle('hidden-section');
-            document.getElementById('authBtn').innerText = isLoginMode ? "LOGIN" : "SIGN UP";
-            document.getElementById('toggleBtn').innerText = isLoginMode ? "Create New Account" : "Back to Login";
+            document.getElementById('authBtn').innerText = isLogin ? "LOGIN" : "SIGN UP";
+            document.getElementById('toggleBtn').innerText = isLogin ? "Create New Account" : "Back to Login";
             generateCaptcha();
         }
 
@@ -155,102 +189,135 @@
             const pass = document.getElementById('password').value;
             const captcha = document.getElementById('captchaInput').value;
 
-            if(captcha !== captchaVal) return alert("Invalid Captcha");
+            if(captcha !== captchaVal) return alert("Captcha Incorrect!");
 
-            if(!isLoginMode) {
+            if(!isLogin) {
                 const name = document.getElementById('fullName').value;
-                localStorage.setItem(`user_${user}`, JSON.stringify({name, pass}));
-                alert("Account Created!"); toggleAuthMode();
+                const role = document.getElementById('userRole').value;
+                if(!role) return alert("Please select a role!");
+                localStorage.setItem(`u_${user}`, JSON.stringify({name, pass, role}));
+                alert("Signup Successful!"); toggleAuthMode();
             } else {
-                const data = JSON.parse(localStorage.getItem(`user_${user}`));
+                const data = JSON.parse(localStorage.getItem(`u_${user}`));
                 if(data && data.pass === pass) {
                     localStorage.setItem('active_user', user);
-                    startApp(data.name);
-                } else alert("Error!");
+                    startApp(data);
+                } else alert("Invalid Credentials");
             }
         }
 
-        // --- TAB SYSTEM ---
-        function switchTab(tabId) {
-            document.getElementById('expenseTab').classList.add('hidden-section');
-            document.getElementById('studentTab').classList.add('hidden-section');
-            document.getElementById(tabId).classList.remove('hidden-section');
-
-            document.getElementById('btnExpenseTab').classList.remove('active-tab');
-            document.getElementById('btnStudentTab').classList.remove('active-tab');
-            
-            if(tabId === 'expenseTab') document.getElementById('btnExpenseTab').classList.add('active-tab');
-            else document.getElementById('btnStudentTab').classList.add('active-tab');
+        function startApp(data) {
+            document.getElementById('authScreen').classList.add('hidden-section');
+            document.getElementById('mainApp').classList.remove('hidden-section');
+            document.getElementById('displayUserName').innerText = data.name + " (" + data.role.toUpperCase() + ")";
+            if(data.role !== 'student') document.getElementById('btnStudentTab').classList.add('hidden-section');
+            renderUI();
         }
 
-        // --- EXPENSE LOGIC ---
-        function addExpense() {
-            const note = document.getElementById('expNote').value;
-            const amt = parseFloat(document.getElementById('expAmount').value);
-            if(!note || !amt) return;
-            if(amt > balance) return alert("Low Balance!");
-
-            balance -= amt;
-            const transaction = { note, amt, date: new Date().toLocaleString() };
-            expenses.unshift(transaction);
-            saveAndRefresh();
-            document.getElementById('expNote').value = "";
-            document.getElementById('expAmount').value = "";
-        }
-
+        // --- CORE FUNCTIONS ---
         function updateBalance() {
             const amt = parseFloat(document.getElementById('topupAmt').value);
-            if(amt) { balance += amt; saveAndRefresh(); }
+            if(amt) { balance += amt; save(); }
             document.getElementById('topupAmt').value = "";
         }
 
-        function saveAndRefresh() {
-            localStorage.setItem('m_bal', balance);
-            localStorage.setItem('m_expenses', JSON.stringify(expenses));
-            renderDashboard();
+        function addExpense() {
+            const cat = document.getElementById('expCategory').value;
+            const amt = parseFloat(document.getElementById('expAmount').value);
+            const note = document.getElementById('expNote').value;
+            if(!amt || amt > balance) return alert("Check Amount/Balance");
+            
+            balance -= amt;
+            expenses.unshift({ cat, amt, note: note || 'No note', date: new Date().toLocaleDateString() });
+            save();
+            document.getElementById('expAmount').value = "";
+            document.getElementById('expNote').value = "";
         }
 
-        function renderDashboard() {
-            document.getElementById('mainBal').innerText = balance.toLocaleString();
-            let totalSpent = expenses.reduce((s, e) => s + e.amt, 0);
-            document.getElementById('totalSpent').innerText = totalSpent.toLocaleString();
+        function addReminder() {
+            const task = document.getElementById('remTask').value;
+            const date = document.getElementById('remDate').value;
+            if(task && date) {
+                reminders.push({ task, date });
+                localStorage.setItem('m_reminders', JSON.stringify(reminders));
+                renderUI();
+                closeModal('reminderModal');
+            }
+        }
 
-            const list = document.getElementById('transList');
-            list.innerHTML = expenses.map(e => `
-                <div class="flex justify-between items-center bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                    <div><p class="font-bold text-slate-700">${e.note}</p><p class="text-[9px] text-slate-400 font-bold">${e.date}</p></div>
-                    <p class="font-black text-rose-500">- ৳${e.amt}</p>
+        function save() {
+            localStorage.setItem('m_bal', balance);
+            localStorage.setItem('m_expenses', JSON.stringify(expenses));
+            renderUI();
+        }
+
+        function renderUI() {
+            document.getElementById('mainBal').innerText = balance.toLocaleString();
+            document.getElementById('transList').innerHTML = expenses.map(e => `
+                <div class="flex justify-between border-b pb-1">
+                    <span><b>${e.cat}</b> <br> <span class="opacity-50 text-[10px]">${e.note}</span></span>
+                    <span class="text-rose-500 font-bold">-৳${e.amt}</span>
+                </div>
+            `).join('');
+            document.getElementById('reminderList').innerHTML = reminders.map((r, i) => `
+                <div class="flex justify-between bg-orange-50 p-2 rounded">
+                    <span>${r.task} (Due: ${r.date})</span>
+                    <button onclick="delRem(${i})" class="text-rose-500 font-bold">X</button>
                 </div>
             `).join('');
         }
 
-        // --- HELPERS ---
-        function startApp(name) {
-            document.getElementById('authScreen').classList.add('hidden-section');
-            document.getElementById('mainApp').classList.remove('hidden-section');
-            document.getElementById('displayUserName').innerText = name;
-            renderDashboard();
+        function delRem(i) {
+            reminders.splice(i, 1);
+            localStorage.setItem('m_reminders', JSON.stringify(reminders));
+            renderUI();
         }
 
-        function logout() { localStorage.removeItem('active_user'); location.reload(); }
+        // --- PDF GENERATOR ---
+        function switchDoc(type) {
+            currentDocType = type;
+            document.getElementById('indexFields').classList.toggle('hidden-section', type === 'cover');
+            document.getElementById('tabCover').className = type === 'cover' ? 'flex-1 py-2 font-bold border-b-4 border-indigo-600' : 'flex-1 py-2 font-bold border-b-4 border-slate-200';
+            document.getElementById('tabIndex').className = type === 'index' ? 'flex-1 py-2 font-bold border-b-4 border-indigo-600' : 'flex-1 py-2 font-bold border-b-4 border-slate-200';
+        }
+
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const uni = document.getElementById('docUni').value;
+            const title = document.getElementById('docTitle').value;
+            const name = document.getElementById('docName').value;
+
+            if(currentDocType === 'cover') {
+                doc.setFontSize(24); doc.text(uni.toUpperCase(), 105, 50, null, null, "center");
+                doc.setFontSize(14); doc.text("ASSIGNMENT ON", 105, 100, null, null, "center");
+                doc.setFontSize(18); doc.text(title, 105, 115, null, null, "center");
+                doc.setFontSize(14); doc.text("SUBMITTED BY: " + name, 105, 180, null, null, "center");
+            } else {
+                const topics = document.getElementById('indexData').value.split(',');
+                doc.setFontSize(22); doc.text("TABLE OF CONTENTS", 105, 30, null, null, "center");
+                doc.autoTable({ startY: 45, head: [['#', 'Topic Name', 'Page']], body: topics.map((t, i) => [i+1, t.trim(), '___']) });
+            }
+            doc.save(`${currentDocType}.pdf`);
+        }
+
+        // --- UTILS ---
+        function switchTab(id) {
+            document.getElementById('expenseTab').classList.add('hidden-section');
+            document.getElementById('studentTab').classList.add('hidden-section');
+            document.getElementById(id).classList.remove('hidden-section');
+            document.getElementById('btnExpenseTab').classList.remove('active-tab');
+            document.getElementById('btnStudentTab').classList.remove('active-tab');
+            document.getElementById('btn' + id.charAt(0).toUpperCase() + id.slice(1)).classList.add('active-tab');
+        }
         function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-        function addGpaInput() { document.getElementById('gpaInputs').insertAdjacentHTML('beforeend', `<input type="number" step="0.01" class="w-full border p-4 rounded-2xl gpa-val" placeholder="Grade Point">`); }
-        
-        function calcGpa() {
-            const vals = document.querySelectorAll('.gpa-val');
-            let sum = 0, count = 0;
-            vals.forEach(v => { if(v.value) { sum += parseFloat(v.value); count++; }});
-            document.getElementById('gpaFinal').innerText = count > 0 ? (sum/count).toFixed(2) : "0.00";
-        }
+        function logout() { localStorage.removeItem('active_user'); location.reload(); }
 
         window.onload = () => {
             generateCaptcha();
-            const active = localStorage.getItem('active_user');
-            if(active) {
-                const data = JSON.parse(localStorage.getItem(`user_${active}`));
-                startApp(data.name);
-            }
+            const session = localStorage.getItem('active_user');
+            if(session) startApp(JSON.parse(localStorage.getItem(`u_${session}`)));
         };
     </script>
 </body>
