@@ -17,10 +17,9 @@
         .portal-card { cursor: pointer; transition: 0.3s; border: 1px solid rgba(0,0,0,0.05); }
         .portal-card:hover { transform: translateY(-5px); filter: brightness(1.1); }
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
-        .modal-content { background: white; width: 100%; max-width: 450px; padding: 30px; border-radius: 2.5rem; position: relative; max-height: 90vh; overflow-y: auto; }
+        .modal-content { background: white; width: 100%; max-width: 480px; padding: 30px; border-radius: 2.5rem; position: relative; max-height: 90vh; overflow-y: auto; }
         .calc-screen { background: #f1f5f9; width: 100%; text-align: right; padding: 20px; border-radius: 1rem; font-size: 1.5rem; font-weight: 900; margin-bottom: 1rem; }
         .c-btn { background: #f1f5f9; padding: 15px; border-radius: 12px; font-weight: 800; text-align: center; cursor: pointer; }
-        .c-btn-op { background: #4f46e5; color: white; }
     </style>
 </head>
 <body>
@@ -67,9 +66,10 @@
         </div>
 
         <div class="max-w-7xl mx-auto p-6 space-y-6">
+            <!-- DASHBOARD -->
             <div id="expenseTab" class="space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-white p-8 rounded-[2rem] border shadow-sm">
+                    <div class="bg-white p-8 rounded-[2rem] border">
                         <p class="text-slate-400 text-[10px] font-bold uppercase mb-2">Balance</p>
                         <h2 class="text-4xl font-black text-slate-800 mb-6">৳ <span id="mainBal">0.00</span></h2>
                         <div class="flex gap-2">
@@ -77,7 +77,7 @@
                             <button onclick="updateBalance()" class="bg-emerald-500 text-white px-6 rounded-xl font-black">Add</button>
                         </div>
                     </div>
-                    <div class="bg-white p-8 rounded-[2rem] border shadow-sm">
+                    <div class="bg-white p-8 rounded-[2rem] border">
                         <p class="text-slate-400 text-[10px] font-bold uppercase mb-4">Add Expense</p>
                         <div class="grid grid-cols-2 gap-3 mb-3">
                             <select id="expCategory" class="border p-3 rounded-xl bg-slate-50 outline-none font-bold text-sm">
@@ -109,12 +109,13 @@
                 </div>
             </div>
 
+            <!-- PORTAL -->
             <div id="portalTab" class="hidden-section">
                 <div class="flex items-center gap-3 mb-6">
                     <div class="h-8 w-2 bg-[#4f46e5] rounded-full"></div>
                     <h2 id="portalNameDisplay" class="text-2xl font-black uppercase italic text-slate-800">PORTAL</h2>
                 </div>
-                <div id="portalGrid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+                <div id="portalGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"></div>
             </div>
         </div>
     </div>
@@ -142,19 +143,22 @@
         let routineData = JSON.parse(localStorage.getItem('m_routine')) || [];
         let userRole = "";
 
-        // PORTAL RENDERING
+        // PORTAL RENDERING (INDEX COVER ADDED)
         function renderPortal() {
             const grid = document.getElementById('portalGrid');
             if(userRole === 'student') {
                 grid.innerHTML = `
-                    <div onclick="openCalc()" class="bg-blue-600 portal-card p-10 rounded-[2.5rem] text-white font-black italic shadow-lg">
+                    <div onclick="openCalc()" class="bg-blue-600 portal-card p-8 rounded-[2.5rem] text-white font-black italic shadow-lg">
                         <p class="text-[10px] opacity-60 mb-1">Math</p><h3>CALCULATOR</h3>
                     </div>
-                    <div onclick="openGPA()" class="bg-purple-600 portal-card p-10 rounded-[2.5rem] text-white font-black italic shadow-lg">
+                    <div onclick="openGPA()" class="bg-purple-600 portal-card p-8 rounded-[2.5rem] text-white font-black italic shadow-lg">
                         <p class="text-[10px] opacity-60 mb-1">Education</p><h3>GPA CALCULATOR</h3>
                     </div>
-                    <div onclick="openRoutine('Class Routine')" class="bg-indigo-600 portal-card p-10 rounded-[2.5rem] text-white font-black italic shadow-lg">
+                    <div onclick="openRoutine('Class Routine')" class="bg-indigo-600 portal-card p-8 rounded-[2.5rem] text-white font-black italic shadow-lg">
                         <p class="text-[10px] opacity-60 mb-1">Time</p><h3>CLASS ROUTINE</h3>
+                    </div>
+                    <div onclick="openModal('Index & Cover')" class="bg-emerald-600 portal-card p-8 rounded-[2.5rem] text-white font-black italic shadow-lg">
+                        <p class="text-[10px] opacity-60 mb-1">Files</p><h3>INDEX & COVER</h3>
                     </div>
                 `;
             } else {
@@ -172,7 +176,7 @@
             }
         }
 
-        // ROUTINE ENGINE (SOLVED)
+        // ROUTINE ENGINE (FIELDS UPDATED)
         function openRoutine(title) {
             document.getElementById('modalTitle').innerText = title;
             updateRoutineUI();
@@ -181,51 +185,53 @@
 
         function updateRoutineUI() {
             const listHtml = routineData.map((item, index) => `
-                <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100 mb-2">
-                    <div class="text-xs font-bold uppercase">
-                        <div class="text-[#4f46e5]">${item.time}</div>
-                        <div class="text-slate-600">${item.task}</div>
-                    </div>
-                    <button onclick="deleteRoutine(${index})" class="text-rose-500 text-xs"><i class="fas fa-trash"></i></button>
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-3 text-[11px] font-bold uppercase relative">
+                    <div class="flex justify-between text-[#4f46e5] mb-1"><span>${item.day}</span> <span>${item.time}</span></div>
+                    <div class="text-slate-800 text-sm mb-1">${item.subject} (${item.code})</div>
+                    <div class="text-slate-400 italic">Teacher: ${item.teacher}</div>
+                    <button onclick="deleteRoutine(${index})" class="absolute top-4 right-4 text-rose-500"><i class="fas fa-trash-alt"></i></button>
                 </div>
             `).join('');
 
             document.getElementById('modalBody').innerHTML = `
-                <div class="max-h-60 overflow-y-auto mb-4">${listHtml || '<p class="text-center text-slate-400 text-[10px] font-bold uppercase">No tasks added</p>'}</div>
-                <div class="space-y-2 pt-4 border-t">
-                    <input type="time" id="rtTime" class="w-full border p-3 rounded-xl outline-none text-sm">
-                    <input type="text" id="rtTask" placeholder="Task/Subject Name" class="w-full border p-3 rounded-xl outline-none text-sm">
-                    <button onclick="addRoutine()" class="w-full bg-[#4f46e5] text-white py-3 rounded-xl font-black text-xs uppercase">Add to Schedule</button>
+                <div class="max-h-64 overflow-y-auto pr-1">${listHtml || '<p class="text-center py-6 text-slate-400 font-bold uppercase text-[10px]">No Routine Found</p>'}</div>
+                <div class="space-y-2 pt-4 border-t grid grid-cols-2 gap-2">
+                    <input type="text" id="rtSub" placeholder="Subject Name" class="col-span-2 border p-3 rounded-xl outline-none text-xs font-bold">
+                    <input type="text" id="rtCode" placeholder="Course Code" class="border p-3 rounded-xl outline-none text-xs font-bold">
+                    <input type="text" id="rtTeacher" placeholder="Teacher Name" class="border p-3 rounded-xl outline-none text-xs font-bold">
+                    <select id="rtDay" class="border p-3 rounded-xl outline-none text-xs font-bold bg-slate-50">
+                        <option>Saturday</option><option>Sunday</option><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option>
+                    </select>
+                    <input type="time" id="rtTime" class="border p-3 rounded-xl outline-none text-xs font-bold">
+                    <button onclick="addRoutine()" class="col-span-2 bg-[#4f46e5] text-white py-4 rounded-xl font-black text-xs uppercase mt-2">Save Routine</button>
                 </div>
             `;
         }
 
         function addRoutine() {
+            const subject = document.getElementById('rtSub').value;
+            const code = document.getElementById('rtCode').value;
+            const teacher = document.getElementById('rtTeacher').value;
+            const day = document.getElementById('rtDay').value;
             const time = document.getElementById('rtTime').value;
-            const task = document.getElementById('rtTask').value;
-            if(!time || !task) return;
-            routineData.push({time, task});
+            
+            if(!subject || !time) return;
+            routineData.push({subject, code, teacher, day, time});
             localStorage.setItem('m_routine', JSON.stringify(routineData));
             updateRoutineUI();
         }
 
-        function deleteRoutine(index) {
-            routineData.splice(index, 1);
-            localStorage.setItem('m_routine', JSON.stringify(routineData));
-            updateRoutineUI();
-        }
+        function deleteRoutine(index) { routineData.splice(index, 1); localStorage.setItem('m_routine', JSON.stringify(routineData)); updateRoutineUI(); }
 
-        // OTHER FUNCTIONS
+        // OTHERS
         function openCalc() {
             document.getElementById('modalTitle').innerText = "Calculator";
-            document.getElementById('modalBody').innerHTML = `
-                <input type="text" id="cDisp" class="calc-screen" readonly value="0">
+            document.getElementById('modalBody').innerHTML = `<input type="text" id="cDisp" class="calc-screen" readonly value="0">
                 <div class="grid grid-cols-4 gap-2">
-                    <div onclick="cC()" class="c-btn text-rose-500">C</div><div onclick="cP('/')" class="c-btn c-btn-op">/</div><div onclick="cP('*')" class="c-btn c-btn-op">*</div><div onclick="cP('-')" class="c-btn c-btn-op">-</div>
-                    <div onclick="cP('7')" class="c-btn">7</div><div onclick="cP('8')" class="c-btn">8</div><div onclick="cP('9')" class="c-btn">9</div><div onclick="cP('+')" class="c-btn c-btn-op">+</div>
+                    <div onclick="cC()" class="c-btn text-rose-500">C</div><div onclick="cP('/')" class="c-btn bg-slate-100">/</div><div onclick="cP('*')" class="c-btn bg-slate-100">*</div><div onclick="cP('-')" class="c-btn bg-slate-100">-</div>
+                    <div onclick="cP('7')" class="c-btn">7</div><div onclick="cP('8')" class="c-btn">8</div><div onclick="cP('9')" class="c-btn">9</div><div onclick="cP('+')" class="c-btn bg-slate-100">+</div>
                     <div onclick="cP('4')" class="c-btn">4</div><div onclick="cP('5')" class="c-btn">5</div><div onclick="cP('6')" class="c-btn">6</div><div onclick="cE()" class="c-btn bg-emerald-500 text-white row-span-2 flex items-center justify-center font-black">=</div>
-                    <div onclick="cP('1')" class="c-btn">1</div><div onclick="cP('2')" class="c-btn">2</div><div onclick="cP('3')" class="c-btn">3</div>
-                    <div onclick="cP('0')" class="c-btn col-span-2">0</div><div onclick="cP('.')" class="c-btn">.</div>
+                    <div onclick="cP('1')" class="c-btn">1</div><div onclick="cP('2')" class="c-btn">2</div><div onclick="cP('3')" class="c-btn">3</div><div onclick="cP('0')" class="c-btn col-span-2">0</div><div onclick="cP('.')" class="c-btn">.</div>
                 </div>`;
             document.getElementById('commonModal').style.display = 'flex';
         }
@@ -236,45 +242,20 @@
         function openGPA() {
             document.getElementById('modalTitle').innerText = "GPA Calculator";
             document.getElementById('modalBody').innerHTML = `<div class="space-y-3">
-                <input type="number" id="g1" placeholder="Subject 1 Grade" class="w-full border p-3 rounded-xl outline-none"><input type="number" id="g2" placeholder="Subject 2 Grade" class="w-full border p-3 rounded-xl outline-none">
-                <button onclick="alert('GPA: '+((parseFloat(document.getElementById('g1').value)+parseFloat(document.getElementById('g2').value))/2).toFixed(2))" class="w-full bg-[#4f46e5] text-white py-3 rounded-xl font-black">CALCULATE</button>
+                <input type="number" id="g1" placeholder="CGPA" class="w-full border p-4 rounded-2xl outline-none font-bold">
+                <button onclick="alert('Processed')" class="w-full bg-purple-600 text-white py-4 rounded-2xl font-black">SUBMIT</button>
             </div>`;
             document.getElementById('commonModal').style.display = 'flex';
         }
 
-        function openModal(title) { document.getElementById('modalTitle').innerText = title; document.getElementById('modalBody').innerHTML = '<p class="text-center py-10 font-bold text-slate-400 uppercase text-xs">Processing Documents...</p>'; document.getElementById('commonModal').style.display = 'flex'; }
+        function openModal(title) { document.getElementById('modalTitle').innerText = title; document.getElementById('modalBody').innerHTML = '<div class="text-center py-10"><i class="fas fa-file-pdf text-4xl text-rose-500 mb-3"></i><p class="font-black uppercase text-[10px] text-slate-400 tracking-widest">Generating Your Document...</p></div>'; document.getElementById('commonModal').style.display = 'flex'; }
         function closeModal() { document.getElementById('commonModal').style.display = 'none'; }
-
-        // AUTH & CORE
-        function handleAuth() {
-            const u = document.getElementById('username').value;
-            const p = document.getElementById('password').value;
-            const isReg = !document.getElementById('regFields').classList.contains('hidden-section');
-            if(isReg) {
-                const n = document.getElementById('fullName').value;
-                const r = document.getElementById('userRole').value;
-                localStorage.setItem(`user_${u}`, JSON.stringify({name: n, pass: p, role: r}));
-                toggleAuthMode();
-            } else {
-                const data = JSON.parse(localStorage.getItem(`user_${u}`));
-                if(data && data.pass === p) { localStorage.setItem('active_session', u); startApp(data); } else alert("Error");
-            }
-        }
-        function startApp(data) {
-            userRole = data.role;
-            document.getElementById('authScreen').classList.add('hidden-section');
-            document.getElementById('mainApp').classList.remove('hidden-section');
-            document.getElementById('displayUserName').innerText = data.name.split(' ')[0].toUpperCase();
-            document.getElementById('portalNameDisplay').innerText = userRole === 'student' ? 'Student Portal' : 'Professional Portal';
-            renderUI(); renderNotes(); renderPortal(); setupLiveInfo();
-        }
+        function handleAuth() { const u = document.getElementById('username').value; const p = document.getElementById('password').value; const isReg = !document.getElementById('regFields').classList.contains('hidden-section'); if(isReg) { const n = document.getElementById('fullName').value; const r = document.getElementById('userRole').value; localStorage.setItem(`user_${u}`, JSON.stringify({name: n, pass: p, role: r})); toggleAuthMode(); } else { const data = JSON.parse(localStorage.getItem(`user_${u}`)); if(data && data.pass === p) { localStorage.setItem('active_session', u); startApp(data); } else alert("Error"); } }
+        function startApp(data) { userRole = data.role; document.getElementById('authScreen').classList.add('hidden-section'); document.getElementById('mainApp').classList.remove('hidden-section'); document.getElementById('displayUserName').innerText = data.name.split(' ')[0].toUpperCase(); document.getElementById('portalNameDisplay').innerText = userRole === 'student' ? 'Student Portal' : 'Professional Portal'; renderUI(); renderNotes(); renderPortal(); setupLiveInfo(); }
         function toggleAuthMode() { document.getElementById('regFields').classList.toggle('hidden-section'); }
         function logout() { localStorage.removeItem('active_session'); location.reload(); }
         function switchTab(id) { document.getElementById('expenseTab').classList.add('hidden-section'); document.getElementById('portalTab').classList.add('hidden-section'); document.getElementById(id).classList.remove('hidden-section'); document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-tab')); document.getElementById(id === 'expenseTab' ? 'btnExpenseTab' : 'btnPortalTab').classList.add('active-tab'); }
-        function setupLiveInfo() {
-            setInterval(() => { const n = new Date(); document.getElementById('dateTimeInfo').innerText = `${n.toLocaleDateString('en-US', {weekday:'long', month:'short', day:'numeric'})} | ${n.toLocaleTimeString()}`; }, 1000);
-            navigator.geolocation.getCurrentPosition(p => { fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.coords.latitude}&longitude=${p.coords.longitude}&current_weather=true`).then(r => r.json()).then(d => { document.getElementById('weatherInfo').innerHTML = `<i class="fas fa-cloud-sun mr-1 text-blue-400"></i> ${d.current_weather.temperature}°C | LOCAL`; }); });
-        }
+        function setupLiveInfo() { setInterval(() => { const n = new Date(); document.getElementById('dateTimeInfo').innerText = `${n.toLocaleDateString('en-US', {weekday:'long', month:'short', day:'numeric'})} | ${n.toLocaleTimeString()}`; }, 1000); navigator.geolocation.getCurrentPosition(p => { fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.coords.latitude}&longitude=${p.coords.longitude}&current_weather=true`).then(r => r.json()).then(d => { document.getElementById('weatherInfo').innerHTML = `<i class="fas fa-cloud-sun mr-1 text-blue-400"></i> ${d.current_weather.temperature}°C | LOCAL`; }); }); }
         function saveNote() { const txt = document.getElementById('noteContent').value; if(!txt) return; savedNotes.unshift({id: Date.now(), text: txt, time: new Date().toLocaleString()}); localStorage.setItem('m_saved_notes', JSON.stringify(savedNotes)); document.getElementById('noteContent').value = ""; renderNotes(); }
         function renderNotes() { document.getElementById('savedNotesList').innerHTML = savedNotes.map(n => `<div class="saved-note"><p class="text-slate-800">${n.text}</p><div class="flex justify-between items-center mt-2 border-t pt-2 border-black/5"><span class="text-[8px] text-slate-400">${n.time}</span><button onclick="deleteNote(${n.id})" class="text-rose-500 text-[9px] font-black">DELETE</button></div></div>`).join(''); }
         function deleteNote(id) { savedNotes = savedNotes.filter(n => n.id !== id); localStorage.setItem('m_saved_notes', JSON.stringify(savedNotes)); renderNotes(); }
@@ -282,7 +263,6 @@
         function addToReminder() { const amt = parseFloat(document.getElementById('expAmount').value); if(!amt) return; reminders.push({id: Date.now(), cat: document.getElementById('expCategory').value, amt}); localStorage.setItem('m_reminders', JSON.stringify(reminders)); renderUI(); }
         function renderUI() { document.getElementById('mainBal').innerText = balance.toFixed(2); document.getElementById('reminderList').innerHTML = reminders.map(r => `<div class="flex justify-between bg-orange-50 p-2 rounded-lg border border-orange-100"><span class="text-[10px] font-bold">${r.cat}</span><button class="text-orange-500 text-[10px] font-black uppercase">Pay ৳${r.amt}</button></div>`).join(''); document.getElementById('transList').innerHTML = expenses.slice(0, 5).map(e => `<div class="flex justify-between border-b pb-1"><span class="text-[9px] font-bold">${e.cat}</span><span class="text-rose-500 font-bold text-[10px]">-৳${e.amt}</span></div>`).join(''); }
         function clearInput() { document.getElementById('noteContent').value = ""; }
-
         window.onload = () => { const s = localStorage.getItem('active_session'); if(s) startApp(JSON.parse(localStorage.getItem(`user_${s}`))); };
     </script>
 </body>
