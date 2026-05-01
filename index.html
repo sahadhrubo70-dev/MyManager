@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manager Pro - Functional Portals</title>
+    <title>Manager Pro - Full System</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -15,8 +15,9 @@
         .portal-card:hover { transform: translateY(-5px); filter: brightness(1.1); }
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
         .modal-content { background: white; width: 100%; max-width: 500px; padding: 30px; border-radius: 2.5rem; position: relative; max-height: 90vh; overflow-y: auto; }
-        .p-input { width: 100%; border: 1px solid #e2e8f0; padding: 12px; border-radius: 12px; outline: none; text-sm font-medium; }
-        /* Calculator UI */
+        .p-input { width: 100%; border: 1px solid #e2e8f0; padding: 12px; border-radius: 12px; outline: none; font-size: 14px; }
+        
+        /* Calculator Styles */
         .calc-screen { background: #f1f5f9; width: 100%; text-align: right; padding: 20px; border-radius: 1rem; font-size: 1.5rem; font-weight: 900; margin-bottom: 1rem; border: none; outline: none; }
         .c-btn { background: #f1f5f9; padding: 20px; border-radius: 12px; font-weight: 800; text-align: center; cursor: pointer; transition: 0.2s; }
         .c-btn:active { transform: scale(0.95); background: #e2e8f0; }
@@ -26,8 +27,8 @@
 
     <!-- AUTH SCREEN -->
     <div id="authScreen" class="fixed inset-0 bg-[#4f46e5] z-[2000] flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl text-center">
-            <h1 class="text-3xl font-black italic text-[#4f46e5] mb-6 uppercase">Manager</h1>
+        <div class="bg-white w-full max-w-md rounded-[2.5rem] p-8 shadow-2xl">
+            <h1 class="text-3xl font-black italic text-[#4f46e5] text-center mb-6 uppercase">Manager</h1>
             <div id="regFields" class="hidden-section space-y-4 mb-4">
                 <input type="text" id="fullName" placeholder="Full Name" class="w-full bg-slate-50 border p-4 rounded-2xl outline-none">
                 <select id="userRole" class="w-full bg-slate-50 border p-4 rounded-2xl outline-none font-bold text-slate-500">
@@ -38,7 +39,7 @@
             <input type="text" id="username" placeholder="Username" class="w-full bg-slate-50 border p-4 rounded-2xl outline-none mb-4">
             <input type="password" id="password" placeholder="Password" class="w-full bg-slate-50 border p-4 rounded-2xl outline-none mb-4">
             <button onclick="handleAuth()" class="w-full bg-[#4f46e5] text-white py-4 rounded-2xl font-black">LOGIN</button>
-            <button onclick="toggleAuthMode()" class="w-full text-xs font-bold text-slate-400 uppercase tracking-widest mt-4">New Account</button>
+            <button onclick="toggleAuthMode()" class="w-full text-xs font-bold text-slate-400 uppercase tracking-widest mt-4">Create New Account</button>
         </div>
     </div>
 
@@ -59,16 +60,18 @@
         </nav>
 
         <div class="max-w-7xl mx-auto p-6">
+            <!-- DASHBOARD SECTION -->
+            <div id="expenseTab" class="text-center py-20 font-bold text-slate-400 uppercase italic">
+                Dashbord Active
+            </div>
+
+            <!-- PORTAL SECTION -->
             <div id="portalTab" class="hidden-section">
                 <div class="flex items-center gap-3 mb-6">
                     <div class="h-8 w-2 bg-[#4f46e5] rounded-full"></div>
                     <h2 id="portalNameDisplay" class="text-2xl font-black uppercase italic text-slate-800">PORTAL</h2>
                 </div>
                 <div id="portalGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"></div>
-            </div>
-
-            <div id="expenseTab" class="text-center py-20 font-bold text-slate-400 uppercase italic">
-                Dashbord Active
             </div>
         </div>
     </div>
@@ -88,7 +91,7 @@
         let userRole = "";
         let routineData = JSON.parse(localStorage.getItem('m_routine')) || [];
 
-        // --- CALCULATOR ENGINE ---
+        // --- CALCULATOR ---
         function openCalc() {
             document.getElementById('modalTitle').innerText = "Calculator";
             document.getElementById('modalBody').innerHTML = `
@@ -112,7 +115,7 @@
         function cC() { document.getElementById('cDisp').value = '0'; }
         function cE() { let d = document.getElementById('cDisp'); try { d.value = eval(d.value); } catch { d.value = 'Error'; } }
 
-        // --- ROUTINE ENGINE WITH NOTIFICATION ---
+        // --- ROUTINE WITH 45 MIN NOTIFICATION ---
         function openRoutine() {
             document.getElementById('modalTitle').innerText = "Class Routine";
             updateRoutineUI();
@@ -131,17 +134,17 @@
             `).join('');
 
             document.getElementById('modalBody').innerHTML = `
-                <div class="max-h-64 overflow-y-auto pr-1">${listHtml || '<p class="text-center py-6 text-slate-400 font-bold uppercase text-[10px]">Empty Routine</p>'}</div>
+                <div class="max-h-64 overflow-y-auto pr-1">${listHtml || '<p class="text-center py-6 text-slate-400 font-bold uppercase text-[10px]">No Routine Added</p>'}</div>
                 <div class="space-y-2 pt-4 border-t">
-                    <input type="text" id="rtSub" placeholder="Subject Name" class="p-input text-xs">
+                    <input type="text" id="rtSub" placeholder="Subject Name" class="p-input">
                     <div class="grid grid-cols-2 gap-2">
-                        <input type="text" id="rtCode" placeholder="Subject Code" class="p-input text-xs">
-                        <input type="text" id="rtTeacher" placeholder="Teacher Name" class="p-input text-xs">
-                        <select id="rtDay" class="p-input text-xs bg-white">
+                        <input type="text" id="rtCode" placeholder="Subject Code" class="p-input">
+                        <input type="text" id="rtTeacher" placeholder="Teacher Name" class="p-input">
+                        <select id="rtDay" class="p-input bg-white">
                             <option>Saturday</option><option>Sunday</option><option>Monday</option>
                             <option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option>
                         </select>
-                        <input type="time" id="rtTime" class="p-input text-xs">
+                        <input type="time" id="rtTime" class="p-input">
                     </div>
                     <button onclick="addRoutine()" class="w-full bg-[#4f46e5] text-white py-4 rounded-xl font-black text-xs uppercase mt-2">Save Routine</button>
                 </div>
@@ -155,14 +158,14 @@
             const day = document.getElementById('rtDay').value;
             const time = document.getElementById('rtTime').value;
             if(!subject || !time) return;
-            routineData.push({subject, code, teacher, day, time, notified: false});
+            routineData.push({subject, code, teacher, day, time});
             localStorage.setItem('m_routine', JSON.stringify(routineData));
             updateRoutineUI();
         }
 
         function deleteRoutine(index) { routineData.splice(index, 1); localStorage.setItem('m_routine', JSON.stringify(routineData)); updateRoutineUI(); }
 
-        // --- NOTIFICATION CHECKER (Every Minute) ---
+        // Notification System
         setInterval(() => {
             const now = new Date();
             const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -170,48 +173,44 @@
             const currentTime = now.getHours() * 60 + now.getMinutes();
 
             routineData.forEach(item => {
-                const [h, m] = item.time.split(':').map(Number);
-                const classTime = h * 60 + m;
-                const diff = classTime - currentTime;
-
-                if (item.day === currentDay && diff === 45) {
-                    new Notification("Class Reminder", {
-                        body: `Your class "${item.subject}" starts in 45 minutes!`,
-                        icon: "https://cdn-icons-png.flaticon.com/512/2997/2997300.png"
-                    });
-                    alert(`Upcoming Class: ${item.subject} starts in 45 minutes.`);
+                if (item.day === currentDay) {
+                    const [h, m] = item.time.split(':').map(Number);
+                    const classTime = h * 60 + m;
+                    if (classTime - currentTime === 45) {
+                        if (Notification.permission === "granted") {
+                            new Notification("Class Reminder", { body: `${item.subject} starts in 45 mins!` });
+                        }
+                        alert(`Reminder: Your class "${item.subject}" starts in 45 minutes.`);
+                    }
                 }
             });
         }, 60000);
 
-        // --- RENDER PORTAL ---
+        // --- PORTAL RENDERING ---
         function renderPortal() {
             const grid = document.getElementById('portalGrid');
             if(userRole === 'student') {
                 grid.innerHTML = `
                     <div onclick="openCalc()" class="bg-blue-600 portal-card p-8 rounded-[2.5rem] text-white font-black italic shadow-lg">
-                        <p class="text-[10px] opacity-60 mb-1">Math</p><h3>CALCULATOR</h3>
+                        <p class="text-[10px] opacity-60 mb-1 uppercase">Math</p><h3>CALCULATOR</h3>
                     </div>
-                    <div class="bg-purple-600 portal-card p-8 rounded-[2.5rem] text-white font-black italic shadow-lg opacity-50">
-                        <p class="text-[10px] opacity-60 mb-1">Education</p><h3>GPA CALC</h3>
+                    <div onclick="alert('GPA Calc')" class="bg-purple-600 portal-card p-8 rounded-[2.5rem] text-white font-black italic shadow-lg">
+                        <p class="text-[10px] opacity-60 mb-1 uppercase">Education</p><h3>GPA CALCULATOR</h3>
                     </div>
                     <div onclick="openRoutine()" class="bg-indigo-600 portal-card p-8 rounded-[2.5rem] text-white font-black italic shadow-lg">
-                        <p class="text-[10px] opacity-60 mb-1">Time</p><h3>CLASS ROUTINE</h3>
+                        <p class="text-[10px] opacity-60 mb-1 uppercase">Time</p><h3>CLASS ROUTINE</h3>
                     </div>
-                    <div class="bg-emerald-600 portal-card p-8 rounded-[2.5rem] text-white font-black italic shadow-lg opacity-50">
-                        <p class="text-[10px] opacity-60 mb-1">Files</p><h3>INDEX & COVER</h3>
+                    <div onclick="alert('Index UI')" class="bg-emerald-600 portal-card p-8 rounded-[2.5rem] text-white font-black italic shadow-lg">
+                        <p class="text-[10px] opacity-60 mb-1 uppercase">Files</p><h3>INDEX & COVER</h3>
                     </div>
                 `;
             } else {
                 grid.innerHTML = `
                     <div onclick="openCalc()" class="bg-slate-800 portal-card p-10 rounded-[2.5rem] text-white font-black italic shadow-lg">
-                        <p class="text-[10px] opacity-60 mb-1">Tools</p><h3>CALCULATOR</h3>
+                        <p class="text-[10px] opacity-60 mb-1 uppercase">Tools</p><h3>CALCULATOR</h3>
                     </div>
-                    <div class="bg-emerald-600 portal-card p-10 rounded-[2.5rem] text-white font-black italic shadow-lg opacity-50">
-                        <p class="text-[10px] opacity-60 mb-1">Planning</p><h3>SCHEDULE</h3>
-                    </div>
-                    <div class="bg-[#4f46e5] portal-card p-10 rounded-[2.5rem] text-white font-black italic shadow-lg opacity-50">
-                        <p class="text-[10px] opacity-60 mb-1">Finance</p><h3>EMI CALC</h3>
+                    <div onclick="alert('Schedule UI')" class="bg-emerald-600 portal-card p-10 rounded-[2.5rem] text-white font-black italic shadow-lg">
+                        <p class="text-[10px] opacity-60 mb-1 uppercase">Planning</p><h3>WORK SCHEDULE</h3>
                     </div>
                 `;
             }
@@ -232,7 +231,7 @@
                 if(data && data.pass === p) {
                     localStorage.setItem('active_session', u);
                     startApp(data);
-                } else alert("Invalid");
+                } else alert("Invalid Login");
             }
         }
 
@@ -252,6 +251,9 @@
             document.getElementById('expenseTab').classList.add('hidden-section');
             document.getElementById('portalTab').classList.add('hidden-section');
             document.getElementById(id).classList.remove('hidden-section');
+            document.getElementById('btnExpenseTab').classList.remove('active-tab');
+            document.getElementById('btnPortalTab').classList.remove('active-tab');
+            document.getElementById(id === 'expenseTab' ? 'btnExpenseTab' : 'btnPortalTab').classList.add('active-tab');
         }
 
         window.onload = () => {
