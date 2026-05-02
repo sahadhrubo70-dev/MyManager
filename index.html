@@ -341,7 +341,15 @@
             }
         }
 
-        function setupLiveInfo() { setInterval(() => { const n = new Date(); document.getElementById('dateTimeInfo').innerText = `${n.toLocaleDateString()} | ${n.toLocaleTimeString()}`; }, 1000); }
+        // --- আপডেট করা টাইম ফাংশন ---
+        function setupLiveInfo() {
+            setInterval(() => {
+                const n = new Date();
+                const options = { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' };
+                document.getElementById('dateTimeInfo').innerText = `${n.toLocaleDateString('en-US', options)} | ${n.toLocaleTimeString()}`;
+            }, 1000);
+        }
+
         function saveNote() { const txt = document.getElementById('noteContent').value; if(!txt) return; savedNotes.unshift({id: Date.now(), text: txt, time: new Date().toLocaleString()}); localStorage.setItem('m_saved_notes', JSON.stringify(savedNotes)); document.getElementById('noteContent').value = ""; renderNotes(); }
         function renderNotes() { document.getElementById('savedNotesList').innerHTML = savedNotes.map(n => `<div class="saved-note"><p class="text-slate-800">${n.text}</p><div class="flex justify-between items-center mt-2"><span class="text-[8px] text-slate-400">${n.time}</span><button onclick="deleteNote(${n.id})" class="text-rose-500 text-[9px] font-black uppercase">Delete</button></div></div>`).join(''); }
         function deleteNote(id) { savedNotes = savedNotes.filter(n => n.id !== id); localStorage.setItem('m_saved_notes', JSON.stringify(savedNotes)); renderNotes(); }
