@@ -26,6 +26,8 @@
         .calc-screen { background: #f1f5f9; width: 100%; text-align: right; padding: 20px; border-radius: 1rem; font-size: 1.5rem; font-weight: 900; margin-bottom: 1rem; border: none; outline: none; color: #1e293b; }
         .c-btn { background: #ffffff; padding: 20px; border-radius: 12px; font-weight: 800; text-align: center; cursor: pointer; transition: 0.2s; font-size: 1.1rem; border: 1px solid #f1f5f9; }
         .c-btn:active { transform: scale(0.95); background: #f8fafc; }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -174,7 +176,69 @@
             document.getElementById('btnPortalTab').classList.toggle('active-tab', id === 'portalTab');
         }
 
-        // --- ROUTINE SYSTEM (REQUESTED) ---
+        // --- GPA CALCULATOR SYSTEM ---
+        function openGPA() {
+            document.getElementById('modalTitle').innerText = "GPA Calculator";
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-4">
+                    <div id="gpaFields" class="space-y-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar"></div>
+                    <div class="flex justify-between items-center px-1">
+                        <button onclick="addGpaRow()" class="text-[10px] font-black text-[#4f46e5] uppercase flex items-center gap-2">
+                            <i class="fas fa-plus-circle"></i> Add Subject
+                        </button>
+                        <p class="text-[9px] text-slate-400 font-bold uppercase italic">* Scale: 100 Marks</p>
+                    </div>
+                    <div class="bg-indigo-600 p-6 rounded-[2.5rem] text-center text-white shadow-xl">
+                        <p class="text-[10px] font-bold opacity-70 uppercase mb-1">Total GPA</p>
+                        <h2 id="gpaResult" class="text-4xl font-black">0.00</h2>
+                        <div id="gradeStatus" class="inline-block mt-2 px-4 py-1 bg-white/20 rounded-full text-[10px] font-black uppercase">Result: N/A</div>
+                    </div>
+                    <button onclick="calculateGpa()" class="w-full bg-[#4f46e5] text-white py-4 rounded-2xl font-black uppercase text-[11px] shadow-lg active:scale-95 transition-all">Calculate Result</button>
+                </div>
+            `;
+            addGpaRow();
+            document.getElementById('commonModal').style.display = 'flex';
+        }
+
+        function addGpaRow() {
+            const container = document.getElementById('gpaFields');
+            const row = document.createElement('div');
+            row.className = "bg-slate-50 p-4 rounded-3xl border border-slate-100 space-y-3 relative";
+            row.innerHTML = `
+                <button onclick="this.parentElement.remove()" class="absolute top-3 right-3 text-rose-400"><i class="fas fa-times-circle"></i></button>
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="col-span-2"><label class="p-label">Subject Name</label><input type="text" placeholder="Physics" class="p-input !py-2"></div>
+                    <div><label class="p-label text-[8px]">Assess (30)</label><input type="number" class="g-assess p-input !py-2 font-black"></div>
+                    <div><label class="p-label text-[8px]">Mid (20)</label><input type="number" class="g-mid p-input !py-2 font-black"></div>
+                    <div><label class="p-label text-[8px]">Final (50)</label><input type="number" class="g-final p-input !py-2 font-black"></div>
+                    <div><label class="p-label text-[8px] text-indigo-500">Credit</label><input type="number" class="g-credit p-input !py-2 border-indigo-100 font-black"></div>
+                </div>
+            `;
+            container.appendChild(row);
+        }
+
+        function calculateGpa() {
+            const assessments = document.querySelectorAll('.g-assess');
+            const mids = document.querySelectorAll('.g-mid');
+            const finals = document.querySelectorAll('.g-final');
+            const credits = document.querySelectorAll('.g-credit');
+            let totalWeightedPoints = 0, totalCredits = 0;
+
+            assessments.forEach((item, i) => {
+                const a = parseFloat(item.value || 0), m = parseFloat(mids[i].value || 0), f = parseFloat(finals[i].value || 0), c = parseFloat(credits[i].value || 0);
+                if (c > 0) {
+                    const total = a + m + f;
+                    let p = 0;
+                    if (total >= 80) p = 4.0; else if (total >= 75) p = 3.75; else if (total >= 70) p = 3.5; else if (total >= 65) p = 3.25; else if (total >= 60) p = 3.0; else if (total >= 55) p = 2.75; else if (total >= 50) p = 2.5; else if (total >= 45) p = 2.25; else if (total >= 40) p = 2.0;
+                    totalWeightedPoints += (p * c); totalCredits += c;
+                }
+            });
+            const gpa = totalCredits > 0 ? (totalWeightedPoints / totalCredits).toFixed(2) : "0.00";
+            document.getElementById('gpaResult').innerText = gpa;
+            document.getElementById('gradeStatus').innerText = gpa >= 3.75 ? "Result: Brilliant" : (gpa >= 2.0 ? "Result: Passed" : "Result: N/A");
+        }
+
+        // --- ROUTINE SYSTEM ---
         function openRoutineManager() {
             const title = userRole === 'student' ? "Class Routine" : "Work Schedule";
             document.getElementById('modalTitle').innerText = title;
@@ -182,39 +246,16 @@
                 <div class="space-y-4 text-left">
                     <div class="bg-slate-50 p-5 rounded-[2rem] border border-dashed border-slate-300">
                         <div class="grid grid-cols-2 gap-3 mb-4">
-                            <div class="col-span-2">
-                                <label class="p-label">Subject Name</label>
-                                <input type="text" id="rName" placeholder="Subject Name" class="p-input">
-                            </div>
-                            <div>
-                                <label class="p-label">Course Code (Opt)</label>
-                                <input type="text" id="rCode" placeholder="Code" class="p-input">
-                            </div>
-                            <div>
-                                <label class="p-label">Teacher Name</label>
-                                <input type="text" id="rTeacher" placeholder="Teacher Name" class="p-input">
-                            </div>
-                            <div>
-                                <label class="p-label">Classroom No</label>
-                                <input type="text" id="rRoom" placeholder="Room No" class="p-input">
-                            </div>
-                            <div>
-                                <label class="p-label">Time</label>
-                                <input type="time" id="rTime" class="p-input">
-                            </div>
-                            <div class="col-span-2">
-                                <label class="p-label">Day of Week</label>
-                                <select id="rDay" class="p-input font-bold text-sm">
-                                    <option>Saturday</option><option>Sunday</option><option>Monday</option>
-                                    <option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option>
-                                </select>
-                            </div>
+                            <div class="col-span-2"><label class="p-label">Subject Name</label><input type="text" id="rName" class="p-input"></div>
+                            <div><label class="p-label">Course Code</label><input type="text" id="rCode" class="p-input"></div>
+                            <div><label class="p-label">Teacher Name</label><input type="text" id="rTeacher" class="p-input"></div>
+                            <div><label class="p-label">Room No</label><input type="text" id="rRoom" class="p-input"></div>
+                            <div><label class="p-label">Time</label><input type="time" id="rTime" class="p-input"></div>
+                            <div class="col-span-2"><label class="p-label">Day of Week</label><select id="rDay" class="p-input font-bold text-sm"><option>Saturday</option><option>Sunday</option><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option></select></div>
                         </div>
-                        <button onclick="addRoutineItem()" class="w-full bg-[#4f46e5] text-white py-3.5 rounded-2xl font-black uppercase text-[10px] shadow-lg">
-                            Add to Schedule
-                        </button>
+                        <button onclick="addRoutineItem()" class="w-full bg-[#4f46e5] text-white py-3.5 rounded-2xl font-black uppercase text-[10px] shadow-lg">Add to Schedule</button>
                     </div>
-                    <div id="routineList" class="space-y-3 max-h-[300px] overflow-y-auto pr-1"></div>
+                    <div id="routineList" class="space-y-3 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar"></div>
                 </div>
             `;
             renderRoutineList();
@@ -222,16 +263,9 @@
         }
 
         function addRoutineItem() {
-            const name = document.getElementById('rName').value;
-            const time = document.getElementById('rTime').value;
-            const day = document.getElementById('rDay').value;
-            const code = document.getElementById('rCode').value || 'N/A';
-            const teacher = document.getElementById('rTeacher').value || 'N/A';
-            const room = document.getElementById('rRoom').value || 'N/A';
-
+            const name = document.getElementById('rName').value, time = document.getElementById('rTime').value, day = document.getElementById('rDay').value;
             if(!name || !time || !day) return alert("Fill required fields!");
-
-            routineData.push({ id: Date.now(), name, time, day, code, teacher, room });
+            routineData.push({ id: Date.now(), name, time, day, code: document.getElementById('rCode').value || 'N/A', teacher: document.getElementById('rTeacher').value || 'N/A', room: document.getElementById('rRoom').value || 'N/A' });
             routineData.sort((a, b) => a.time.localeCompare(b.time));
             localStorage.setItem('m_routine', JSON.stringify(routineData));
             renderRoutineList();
@@ -242,35 +276,21 @@
             if(!list) return;
             list.innerHTML = routineData.map(item => `
                 <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex justify-between items-center">
-                    <div>
-                        <p class="text-[9px] font-black text-indigo-500 uppercase">${item.day} | ${item.time}</p>
-                        <h3 class="font-black text-slate-800 text-sm uppercase">${item.name}</h3>
-                        <p class="text-[10px] text-slate-400">Room: ${item.room} | Prof: ${item.teacher}</p>
-                    </div>
+                    <div><p class="text-[9px] font-black text-indigo-500 uppercase">${item.day} | ${item.time}</p><h3 class="font-black text-slate-800 text-sm uppercase">${item.name}</h3><p class="text-[10px] text-slate-400">Room: ${item.room} | Prof: ${item.teacher}</p></div>
                     <button onclick="deleteRoutine(${item.id})" class="text-rose-400"><i class="fas fa-trash"></i></button>
                 </div>
             `).join('');
         }
 
-        function deleteRoutine(id) {
-            routineData = routineData.filter(i => i.id !== id);
-            localStorage.setItem('m_routine', JSON.stringify(routineData));
-            renderRoutineList();
-        }
+        function deleteRoutine(id) { routineData = routineData.filter(i => i.id !== id); localStorage.setItem('m_routine', JSON.stringify(routineData)); renderRoutineList(); }
 
         function startNotificationSystem() {
             if(checkNotify) clearInterval(checkNotify);
             checkNotify = setInterval(() => {
-                const now = new Date();
-                const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
-                const currentTime = now.getHours() * 60 + now.getMinutes();
-
+                const now = new Date(), currentDay = now.toLocaleDateString('en-US', { weekday: 'long' }), currentTime = now.getHours() * 60 + now.getMinutes();
                 routineData.forEach(item => {
                     if (item.day === currentDay) {
-                        const [h, m] = item.time.split(':');
-                        const classTime = parseInt(h) * 60 + parseInt(m);
-                        const diff = classTime - currentTime;
-
+                        const [h, m] = item.time.split(':'), classTime = parseInt(h) * 60 + parseInt(m), diff = classTime - currentTime;
                         if (diff === 45) triggerAlert(item);
                     }
                 });
@@ -278,36 +298,24 @@
         }
 
         function triggerAlert(item) {
-            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-            audio.loop = true; audio.play();
-
+            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); audio.play();
             const alertBox = document.createElement('div');
             alertBox.className = "fixed top-10 left-1/2 -translate-x-1/2 z-[9999] bg-[#4f46e5] text-white p-6 rounded-[2rem] shadow-2xl border-4 border-white text-center w-[90%] max-w-sm";
-            alertBox.innerHTML = `
-                <div class="animate-bounce mb-2"><i class="fas fa-bell text-3xl"></i></div>
-                <h2 class="font-black text-lg uppercase italic">Class Reminder!</h2>
-                <p class="text-xs opacity-90 mt-1 font-bold">${item.name} in 45 mins</p>
-                <div class="mt-4 text-[10px] bg-white/20 p-3 rounded-xl">Room: ${item.room} | Teacher: ${item.teacher}</div>
-            `;
+            alertBox.innerHTML = `<div class="animate-bounce mb-2"><i class="fas fa-bell text-3xl"></i></div><h2 class="font-black text-lg uppercase italic">Class Reminder!</h2><p class="text-xs opacity-90 mt-1 font-bold">${item.name} in 45 mins</p>`;
             document.body.appendChild(alertBox);
-            setTimeout(() => { audio.pause(); alertBox.remove(); }, 30000);
+            setTimeout(() => { alertBox.remove(); }, 30000);
         }
 
-        // --- OTHER UTILS (GPA, EMI, CALC) ---
+        // --- OTHER UTILS ---
         function openCalc() {
             document.getElementById('modalTitle').innerText = "Calculator";
             document.getElementById('modalBody').innerHTML = `
                 <input type="text" id="cDisp" class="calc-screen" readonly value="0">
                 <div class="grid grid-cols-4 gap-2">
-                    <div onclick="cC()" class="c-btn text-rose-500 col-span-2">C</div>
-                    <div onclick="cP('/')" class="c-btn bg-slate-100">/</div>
-                    <div onclick="cP('*')" class="c-btn bg-slate-100">*</div>
-                    <div onclick="cP('7')" class="c-btn">7</div><div onclick="cP('8')" class="c-btn">8</div><div onclick="cP('9')" class="c-btn">9</div>
-                    <div onclick="cP('-')" class="c-btn bg-slate-100">-</div>
-                    <div onclick="cP('4')" class="c-btn">4</div><div onclick="cP('5')" class="c-btn">5</div><div onclick="cP('6')" class="c-btn">6</div>
-                    <div onclick="cP('+')" class="c-btn bg-slate-100">+</div>
-                    <div onclick="cP('1')" class="c-btn">1</div><div onclick="cP('2')" class="c-btn">2</div><div onclick="cP('3')" class="c-btn">3</div>
-                    <div onclick="cE()" class="c-btn bg-emerald-500 text-white row-span-2 flex items-center justify-center font-black">=</div>
+                    <div onclick="cC()" class="c-btn text-rose-500 col-span-2">C</div><div onclick="cP('/')" class="c-btn bg-slate-100">/</div><div onclick="cP('*')" class="c-btn bg-slate-100">*</div>
+                    <div onclick="cP('7')" class="c-btn">7</div><div onclick="cP('8')" class="c-btn">8</div><div onclick="cP('9')" class="c-btn">9</div><div onclick="cP('-')" class="c-btn bg-slate-100">-</div>
+                    <div onclick="cP('4')" class="c-btn">4</div><div onclick="cP('5')" class="c-btn">5</div><div onclick="cP('6')" class="c-btn">6</div><div onclick="cP('+')" class="c-btn bg-slate-100">+</div>
+                    <div onclick="cP('1')" class="c-btn">1</div><div onclick="cP('2')" class="c-btn">2</div><div onclick="cP('3')" class="c-btn">3</div><div onclick="cE()" class="c-btn bg-emerald-500 text-white row-span-2 flex items-center justify-center font-black">=</div>
                     <div onclick="cP('0')" class="c-btn col-span-2">0</div><div onclick="cP('.')" class="c-btn">.</div>
                 </div>
             `;
@@ -322,6 +330,7 @@
             if(userRole === 'student') {
                 grid.innerHTML = `
                     <div onclick="openCalc()" class="bg-blue-600 portal-card p-8 rounded-[2.5rem] text-white font-black italic shadow-lg"><p class="text-[10px] opacity-60 mb-1">Math</p><h3>CALCULATOR</h3></div>
+                    <div onclick="openGPA()" class="bg-purple-600 portal-card p-8 rounded-[2.5rem] text-white font-black italic shadow-lg"><p class="text-[10px] opacity-60 mb-1">Academic</p><h3>GPA CALCULATOR</h3></div>
                     <div onclick="openRoutineManager()" class="bg-indigo-600 portal-card p-8 rounded-[2.5rem] text-white font-black italic shadow-lg"><p class="text-[10px] opacity-60 mb-1">Time</p><h3>CLASS ROUTINE</h3></div>
                 `;
             } else {
@@ -332,40 +341,16 @@
             }
         }
 
-        function setupLiveInfo() {
-            setInterval(() => {
-                const n = new Date();
-                document.getElementById('dateTimeInfo').innerText = `${n.toLocaleDateString()} | ${n.toLocaleTimeString()}`;
-            }, 1000);
-        }
-
-        function saveNote() {
-            const txt = document.getElementById('noteContent').value; if(!txt) return;
-            savedNotes.unshift({id: Date.now(), text: txt, time: new Date().toLocaleString()});
-            localStorage.setItem('m_saved_notes', JSON.stringify(savedNotes));
-            document.getElementById('noteContent').value = ""; renderNotes();
-        }
-
-        function renderNotes() {
-            document.getElementById('savedNotesList').innerHTML = savedNotes.map(n => `
-                <div class="saved-note"><p class="text-slate-800">${n.text}</p><div class="flex justify-between items-center mt-2"><span class="text-[8px] text-slate-400">${n.time}</span><button onclick="deleteNote(${n.id})" class="text-rose-500 text-[9px] font-black uppercase">Delete</button></div></div>
-            `).join('');
-        }
-
+        function setupLiveInfo() { setInterval(() => { const n = new Date(); document.getElementById('dateTimeInfo').innerText = `${n.toLocaleDateString()} | ${n.toLocaleTimeString()}`; }, 1000); }
+        function saveNote() { const txt = document.getElementById('noteContent').value; if(!txt) return; savedNotes.unshift({id: Date.now(), text: txt, time: new Date().toLocaleString()}); localStorage.setItem('m_saved_notes', JSON.stringify(savedNotes)); document.getElementById('noteContent').value = ""; renderNotes(); }
+        function renderNotes() { document.getElementById('savedNotesList').innerHTML = savedNotes.map(n => `<div class="saved-note"><p class="text-slate-800">${n.text}</p><div class="flex justify-between items-center mt-2"><span class="text-[8px] text-slate-400">${n.time}</span><button onclick="deleteNote(${n.id})" class="text-rose-500 text-[9px] font-black uppercase">Delete</button></div></div>`).join(''); }
         function deleteNote(id) { savedNotes = savedNotes.filter(n => n.id !== id); localStorage.setItem('m_saved_notes', JSON.stringify(savedNotes)); renderNotes(); }
         function updateBalance() { balance += parseFloat(document.getElementById('topupAmt').value || 0); localStorage.setItem('m_bal', balance); renderUI(); document.getElementById('topupAmt').value = ""; }
         function addToReminder() { reminders.push({id: Date.now(), cat: document.getElementById('expCategory').value, amt: document.getElementById('expAmount').value}); localStorage.setItem('m_reminders', JSON.stringify(reminders)); renderUI(); }
-        function renderUI() { 
-            document.getElementById('mainBal').innerText = balance.toFixed(2);
-            document.getElementById('reminderList').innerHTML = reminders.map(r => `<div class="flex justify-between bg-orange-50 p-3 rounded-xl border border-orange-100"><span class="text-[10px] font-bold uppercase">${r.cat}</span><span class="text-orange-500 text-[10px] font-black">৳${r.amt}</span></div>`).join('');
-        }
+        function renderUI() { document.getElementById('mainBal').innerText = balance.toFixed(2); document.getElementById('reminderList').innerHTML = reminders.map(r => `<div class="flex justify-between bg-orange-50 p-3 rounded-xl border border-orange-100"><span class="text-[10px] font-bold uppercase">${r.cat}</span><span class="text-orange-500 text-[10px] font-black">৳${r.amt}</span></div>`).join(''); }
         function clearInput() { document.getElementById('noteContent').value = ""; }
 
-        window.onload = () => {
-            const s = localStorage.getItem('active_session');
-            if(s) startApp(JSON.parse(localStorage.getItem(`user_${s}`)));
-        };
+        window.onload = () => { const s = localStorage.getItem('active_session'); if(s) startApp(JSON.parse(localStorage.getItem(`user_${s}`))); };
     </script>
 </body>
 </html>
-```
