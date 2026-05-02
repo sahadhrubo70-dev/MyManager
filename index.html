@@ -3,11 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manager Pro - Advanced Portals</title>
+    <title>Manager Pro - BuildFace Innovation</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; display: flex; flex-direction: column; min-height: 100vh; }
@@ -18,17 +16,19 @@
         .saved-note { background: #fff9c4; border-left: 4px solid #facc15; padding: 12px; margin-top: 10px; border-radius: 8px; font-size: 13px; }
         .portal-card { cursor: pointer; transition: 0.3s; border: 1px solid rgba(0,0,0,0.05); }
         .portal-card:hover { transform: translateY(-5px); filter: brightness(1.1); }
-        /* Modals */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
         .modal-content { background: white; width: 100%; max-width: 500px; padding: 30px; border-radius: 2.5rem; position: relative; max-height: 90vh; overflow-y: auto; }
-        /* Inputs */
         .p-input { width: 100%; border: 1px solid #e2e8f0; padding: 12px; border-radius: 12px; outline: none; font-size: 14px; font-weight: 500; }
         .p-label { font-size: 10px; font-weight: 900; text-transform: uppercase; color: #94a3b8; margin-left: 5px; margin-bottom: 2px; display: block; }
-
-        /* Calculator Specific UI */
+        
+        /* Calculator & Grid Styles */
         .calc-screen { background: #f1f5f9; width: 100%; text-align: right; padding: 20px; border-radius: 1rem; font-size: 1.5rem; font-weight: 900; margin-bottom: 1rem; border: none; outline: none; color: #1e293b; }
         .c-btn { background: #ffffff; padding: 20px; border-radius: 12px; font-weight: 800; text-align: center; cursor: pointer; transition: 0.2s; font-size: 1.1rem; border: 1px solid #f1f5f9; }
         .c-btn:active { transform: scale(0.95); background: #f8fafc; }
+        
+        /* Notification Toast */
+        #notification-toast { position: fixed; bottom: 20px; right: 20px; transform: translateY(150%); transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 9999; }
+        #notification-toast.show { transform: translateY(0); }
     </style>
 </head>
 <body>
@@ -46,7 +46,7 @@
                 </div>
                 <input type="text" id="username" placeholder="Username" class="w-full bg-slate-50 border p-4 rounded-2xl outline-none">
                 <input type="password" id="password" placeholder="Password" class="w-full bg-slate-50 border p-4 rounded-2xl outline-none">
-                <button onclick="handleAuth()" class="w-full bg-[#4f46e5] text-white py-4 rounded-2xl font-black">LOGIN</button>
+                <button onclick="handleAuth()" class="w-full bg-[#4f46e5] text-white py-4 rounded-2xl font-black">LOGIN / START</button>
                 <button onclick="toggleAuthMode()" class="w-full text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">Create New Account</button>
             </div>
         </div>
@@ -57,7 +57,7 @@
             <div class="max-w-7xl mx-auto px-6 pt-6 pb-2 flex justify-between items-center">
                 <h1 class="text-xl font-black italic uppercase">Manager</h1>
                 <div class="flex items-center gap-4">
-                    <span id="displayUserName" class="text-sm font-bold bg-white/20 px-3 py-1 rounded-lg">USER</span>
+                    <span id="displayUserName" class="text-sm font-bold bg-white/20 px-3 py-1 rounded-lg uppercase">USER</span>
                     <button onclick="logout()" class="text-[10px] bg-rose-500 px-4 py-1.5 rounded-lg font-black uppercase">Logout</button>
                 </div>
             </div>
@@ -68,7 +68,7 @@
         </nav>
 
         <div class="bg-white border-b px-6 py-3 flex justify-between items-center text-[10px] font-bold text-slate-500 uppercase">
-            <div id="weatherInfo">Loading Weather...</div>
+            <div id="weatherInfo"><i class="fas fa-sun text-amber-500 mr-2"></i>Sunny 32°C</div>
             <div id="dateTimeInfo">Loading...</div>
         </div>
 
@@ -76,7 +76,7 @@
             <div id="expenseTab" class="space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="bg-white p-8 rounded-[2rem] border shadow-sm">
-                        <p class="text-slate-400 text-[10px] font-bold uppercase mb-2">Balance</p>
+                        <p class="text-slate-400 text-[10px] font-bold uppercase mb-2">Current Balance</p>
                         <h2 class="text-4xl font-black text-slate-800 mb-6">৳ <span id="mainBal">0.00</span></h2>
                         <div class="flex gap-2">
                             <input type="number" id="topupAmt" placeholder="Add Money" class="flex-1 border p-3 rounded-xl bg-slate-50 outline-none">
@@ -84,25 +84,31 @@
                         </div>
                     </div>
                     <div class="bg-white p-8 rounded-[2rem] border shadow-sm">
-                        <p class="text-slate-400 text-[10px] font-bold uppercase mb-4">Add Expense</p>
-                        <div class="grid grid-cols-2 gap-3 mb-3">
-                            <select id="expCategory" class="border p-3 rounded-xl bg-slate-50 outline-none font-bold text-sm">
-                                <option>Rent</option><option>Bills</option><option>Food</option><option>Travel</option>
-                            </select>
-                            <input type="number" id="expAmount" placeholder="Amount" class="border p-3 rounded-xl bg-slate-50 outline-none">
-                            <input type="date" id="expDate" class="border p-3 rounded-xl bg-slate-50 outline-none text-sm">
-                            <input type="text" id="expNote" placeholder="Note" class="border p-3 rounded-xl bg-slate-50 outline-none">
+                        <p class="text-slate-400 text-[10px] font-bold uppercase mb-4">Quick Schedule / Note</p>
+                        <div class="sticky-note p-4 rounded-lg">
+                            <textarea id="noteContent" class="w-full bg-transparent border-none outline-none text-sm font-medium text-slate-800 resize-none h-20" placeholder="Task for today..."></textarea>
+                            <div class="flex justify-end gap-2 mt-2">
+                                <button onclick="saveNote()" class="bg-slate-800 text-white px-4 py-1.5 rounded-lg text-[9px] font-black uppercase">Save to List</button>
+                            </div>
                         </div>
-                        <button onclick="addToReminder()" class="w-full bg-[#4f46e5] text-white py-3 rounded-xl font-black uppercase text-xs">Add to Reminder</button>
                     </div>
                 </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="space-y-4">
-                        <div class="sticky-note p-6 rounded-sm border shadow-sm"><div class="pin"></div><h3 class="text-[10px] font-black uppercase text-slate-600 mb-2 italic">Important Notes</h3><textarea id="noteContent" class="w-full bg-transparent border-none outline-none text-sm font-medium text-slate-800 resize-none h-32" placeholder="Write here..."></textarea><div class="flex justify-end gap-2 mt-2"><button onclick="clearInput()" class="text-[9px] font-black text-rose-500 uppercase">Clear</button><button onclick="saveNote()" class="bg-slate-800 text-white px-3 py-1 rounded-lg text-[9px] font-black uppercase">Save Note</button></div></div>
-                        <div id="savedNotesList"></div>
+                    <div class="bg-white p-6 rounded-[2rem] border">
+                        <h3 class="text-xs font-black uppercase text-[#4f46e5] mb-4">Saved Notes</h3>
+                        <div id="savedNotesList" class="space-y-3"></div>
                     </div>
-                    <div class="bg-white p-6 rounded-[2rem] border"><h3 class="text-xs font-black uppercase text-orange-500 mb-4">Pending</h3><div id="reminderList" class="space-y-3"></div></div>
-                    <div class="bg-white p-6 rounded-[2rem] border"><h3 class="text-xs font-black uppercase text-slate-400 mb-4">History</h3><div id="transList" class="space-y-3"></div></div>
+                    <div class="bg-white p-6 rounded-[2rem] border">
+                        <h3 class="text-xs font-black uppercase text-orange-500 mb-4">Active Reminders</h3>
+                        <div id="reminderList" class="space-y-3"></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-[2rem] border">
+                        <h3 class="text-xs font-black uppercase text-emerald-500 mb-4">Quick Tasks</h3>
+                        <div id="quickTaskList" class="space-y-3 text-[11px] font-bold text-slate-500">
+                            No tasks for today.
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -126,18 +132,134 @@
         </div>
     </div>
 
+    <div id="notification-toast" class="bg-slate-900 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 border border-white/10">
+        <div class="bg-emerald-500 h-10 w-10 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/40">
+            <i class="fas fa-bell animate-bounce"></i>
+        </div>
+        <div>
+            <p id="notif-title" class="text-[10px] font-black uppercase tracking-widest text-emerald-400">Notification</p>
+            <p id="notif-msg" class="text-sm font-bold">You have a new task pending!</p>
+        </div>
+    </div>
+
     <footer class="py-6 text-center border-t bg-white mt-auto">
         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">© All Copy Reserved by BuildFace Innovation</p>
     </footer>
 
     <script>
         let balance = parseFloat(localStorage.getItem('m_bal')) || 0;
-        let expenses = JSON.parse(localStorage.getItem('m_expenses')) || [];
         let reminders = JSON.parse(localStorage.getItem('m_reminders')) || [];
         let savedNotes = JSON.parse(localStorage.getItem('m_saved_notes')) || [];
+        let routineData = JSON.parse(localStorage.getItem('m_routine')) || [];
         let userRole = "";
 
-        // --- CALCULATOR ENGINE ---
+        // --- AUTH LOGIC ---
+        function handleAuth() {
+            const u = document.getElementById('username').value;
+            const p = document.getElementById('password').value;
+            const isReg = !document.getElementById('regFields').classList.contains('hidden-section');
+            
+            if(!u || !p) return alert("Fill all fields");
+
+            if(isReg) {
+                const n = document.getElementById('fullName').value;
+                const r = document.getElementById('userRole').value;
+                localStorage.setItem(`user_${u}`, JSON.stringify({name: n, pass: p, role: r}));
+                toggleAuthMode();
+                showNotification("Success", "Account created! Please login.");
+            } else {
+                const data = JSON.parse(localStorage.getItem(`user_${u}`));
+                if(data && data.pass === p) {
+                    localStorage.setItem('active_session', u);
+                    startApp(data);
+                } else alert("Invalid Credentials");
+            }
+        }
+
+        function startApp(data) {
+            userRole = data.role;
+            document.getElementById('authScreen').classList.add('hidden-section');
+            document.getElementById('mainApp').classList.remove('hidden-section');
+            document.getElementById('displayUserName').innerText = data.name.split(' ')[0];
+            document.getElementById('portalNameDisplay').innerText = userRole === 'student' ? 'Student Portal' : 'Professional Portal';
+            
+            renderUI(); renderNotes(); renderPortal(); setupLiveInfo();
+            showNotification("Welcome", `Logged in as ${data.name}`);
+        }
+
+        function toggleAuthMode() { document.getElementById('regFields').classList.toggle('hidden-section'); }
+        function logout() { localStorage.removeItem('active_session'); location.reload(); }
+        function closeModal() { document.getElementById('commonModal').style.display = 'none'; }
+        
+        function switchTab(id) {
+            document.getElementById('expenseTab').classList.add('hidden-section');
+            document.getElementById('portalTab').classList.add('hidden-section');
+            document.getElementById(id).classList.remove('hidden-section');
+            document.getElementById('btnExpenseTab').classList.toggle('active-tab', id === 'expenseTab');
+            document.getElementById('btnPortalTab').classList.toggle('active-tab', id === 'portalTab');
+        }
+
+        // --- NOTIFICATION ENGINE ---
+        function showNotification(title, msg) {
+            const toast = document.getElementById('notification-toast');
+            document.getElementById('notif-title').innerText = title;
+            document.getElementById('notif-msg').innerText = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 4000);
+        }
+
+        // --- ROUTINE & WORK SCHEDULE ---
+        function openRoutineManager() {
+            const title = userRole === 'student' ? "Class Routine" : "Work Schedule";
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-3">
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="text" id="rName" placeholder="Subject/Task" class="p-input">
+                        <input type="time" id="rTime" class="p-input">
+                    </div>
+                    <button onclick="addRoutineItem()" class="w-full bg-[#4f46e5] text-white py-3 rounded-xl font-black uppercase text-xs">Add Schedule</button>
+                    <div id="routineList" class="mt-4 space-y-2 border-t pt-4"></div>
+                </div>
+            `;
+            renderRoutineList();
+            document.getElementById('commonModal').style.display = 'flex';
+        }
+
+        function addRoutineItem() {
+            const name = document.getElementById('rName').value;
+            const time = document.getElementById('rTime').value;
+            if(!name || !time) return;
+
+            routineData.push({ id: Date.now(), name, time });
+            localStorage.setItem('m_routine', JSON.stringify(routineData));
+            showNotification("Schedule Added", `${name} set at ${time}`);
+            renderRoutineList();
+            renderUI();
+        }
+
+        function renderRoutineList() {
+            const list = document.getElementById('routineList');
+            if(!list) return;
+            list.innerHTML = routineData.map(item => `
+                <div class="flex justify-between items-center bg-slate-50 p-3 rounded-xl border">
+                    <div>
+                        <p class="text-xs font-black uppercase">${item.name}</p>
+                        <p class="text-[10px] text-slate-400 font-bold">${item.time}</p>
+                    </div>
+                    <button onclick="deleteRoutine(${item.id})" class="text-rose-500 text-xs"><i class="fas fa-trash"></i></button>
+                </div>
+            `).join('') || "<p class='text-center text-[10px] font-bold text-slate-400'>Empty Schedule</p>";
+        }
+
+        function deleteRoutine(id) {
+            routineData = routineData.filter(i => i.id !== id);
+            localStorage.setItem('m_routine', JSON.stringify(routineData));
+            renderRoutineList();
+            renderUI();
+        }
+
+        // --- CALCULATORS & OTHER PORTAL FEATURES ---
         function openCalc() {
             document.getElementById('modalTitle').innerText = "Calculator";
             document.getElementById('modalBody').innerHTML = `
@@ -157,159 +279,51 @@
             `;
             document.getElementById('commonModal').style.display = 'flex';
         }
-        function cP(v) { 
-            let d = document.getElementById('cDisp'); 
-            d.value === '0' || d.value === 'Error' ? d.value = v : d.value += v; 
-        }
+        function cP(v) { let d = document.getElementById('cDisp'); d.value === '0' ? d.value = v : d.value += v; }
         function cC() { document.getElementById('cDisp').value = '0'; }
-        function cE() { 
-            let d = document.getElementById('cDisp'); 
-            try { d.value = eval(d.value); } catch { d.value = 'Error'; } 
-        }
+        function cE() { try { document.getElementById('cDisp').value = eval(document.getElementById('cDisp').value); } catch { document.getElementById('cDisp').value = 'Error'; } }
 
-        // --- STUDENT PORTAL LOGIC ---
-        function openGPA() {
-            document.getElementById('modalTitle').innerText = "GPA Calculator (Advanced)";
-            document.getElementById('modalBody').innerHTML = `
-                <div id="gpaFields" class="space-y-3 max-h-60 overflow-y-auto pr-2"></div>
-                <button onclick="addGpaRow()" class="text-[9px] font-black text-[#4f46e5] uppercase mt-2">+ Add Subject</button>
-                <div class="bg-slate-50 p-4 rounded-xl text-center mt-4 border">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase">Calculated GPA</p>
-                    <h2 id="gpaResult" class="text-3xl font-black text-slate-800">0.00</h2>
-                </div>
-                <button onclick="calculateGpa()" class="w-full bg-[#4f46e5] text-white py-3 rounded-xl font-black uppercase text-xs mt-3">Calculate GPA</button>
-            `;
-            addGpaRow(); addGpaRow();
-            document.getElementById('commonModal').style.display = 'flex';
-        }
-
-        function addGpaRow() {
-            const row = `<div class="grid grid-cols-5 gap-2 border-b pb-2">
-                <input type="text" placeholder="Subject" class="col-span-2 border p-2 rounded-lg text-xs outline-none">
-                <input type="number" placeholder="Credit" class="border p-2 rounded-lg text-xs g-credit outline-none">
-                <input type="number" placeholder="Marks" class="border p-2 rounded-lg text-xs g-marks outline-none">
-                <button onclick="this.parentElement.remove()" class="text-rose-500 text-xs"><i class="fas fa-trash"></i></button>
-            </div>`;
-            document.getElementById('gpaFields').insertAdjacentHTML('beforeend', row);
-        }
-
-        function calculateGpa() {
-            const credits = document.querySelectorAll('.g-credit');
-            const marks = document.querySelectorAll('.g-marks');
-            let totalWeightedMarks = 0; let totalCredits = 0;
-            credits.forEach((cInput, i) => {
-                const credit = parseFloat(cInput.value); const mark = parseFloat(marks[i].value);
-                if(credit && mark) { totalWeightedMarks += (mark * credit); totalCredits += credit; }
-            });
-            const gpa = totalCredits > 0 ? (totalWeightedMarks / totalCredits / 20).toFixed(2) : "0.00";
-            document.getElementById('gpaResult').innerText = gpa;
-        }
-
-        // --- PROFESSION PORTAL LOGIC ---
-        function openEMI() {
-            document.getElementById('modalTitle').innerText = "EMI Calculator";
-            document.getElementById('modalBody').innerHTML = `
-                <div class="space-y-3">
-                    <div><label class="p-label">Loan Amount (৳)</label><input type="number" id="eAmt" class="p-input"></div>
-                    <div><label class="p-label">Interest Rate (%)</label><input type="number" id="eRate" class="p-input"></div>
-                    <div><label class="p-label">Tenure (Months)</label><input type="number" id="eTenure" class="p-input"></div>
-                    <div class="bg-emerald-50 p-4 rounded-xl text-center border border-emerald-100">
-                        <p class="text-[10px] font-bold text-emerald-400 uppercase">Monthly EMI</p>
-                        <h2 id="emiResult" class="text-3xl font-black text-emerald-800">৳ 0.00</h2>
-                    </div>
-                    <button onclick="calculateEmi()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-black uppercase text-xs">Calculate</button>
-                </div>
-            `;
-            document.getElementById('commonModal').style.display = 'flex';
-        }
-
-        function calculateEmi() {
-            const p = parseFloat(document.getElementById('eAmt').value);
-            const r = parseFloat(document.getElementById('eRate').value) / 12 / 100;
-            const n = parseFloat(document.getElementById('eTenure').value);
-            if(p && r && n) {
-                const emi = (p * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
-                document.getElementById('emiResult').innerText = `৳ ${emi.toFixed(2)}`;
-            }
-        }
-
-        // --- PORTAL RENDERING ---
+        // --- UI RENDERING ---
         function renderPortal() {
             const grid = document.getElementById('portalGrid');
+            const color = userRole === 'student' ? 'bg-blue-600' : 'bg-slate-800';
+            const routineTitle = userRole === 'student' ? 'CLASS ROUTINE' : 'WORK SCHEDULE';
+            
+            grid.innerHTML = `
+                <div onclick="openCalc()" class="${color} portal-card p-8 rounded-[2.5rem] text-white font-black italic shadow-lg">
+                    <p class="text-[10px] opacity-60 mb-1">Math</p><h3>CALCULATOR</h3>
+                </div>
+                <div onclick="openRoutineManager()" class="bg-indigo-600 portal-card p-8 rounded-[2.5rem] text-white font-black italic shadow-lg">
+                    <p class="text-[10px] opacity-60 mb-1">Time</p><h3>${routineTitle}</h3>
+                </div>
+            `;
             if(userRole === 'student') {
-                grid.innerHTML = `
-                    <div onclick="openCalc()" class="bg-blue-600 portal-card p-8 rounded-[2.5rem] text-white font-black italic shadow-lg">
-                        <p class="text-[10px] opacity-60 mb-1">Math</p><h3>CALCULATOR</h3>
-                    </div>
-                    <div onclick="openGPA()" class="bg-purple-600 portal-card p-8 rounded-[2.5rem] text-white font-black italic shadow-lg">
-                        <p class="text-[10px] opacity-60 mb-1">Education</p><h3>GPA CALCULATOR</h3>
-                    </div>
-                    <div onclick="alert('Routine UI...')" class="bg-indigo-600 portal-card p-8 rounded-[2.5rem] text-white font-black italic shadow-lg">
-                        <p class="text-[10px] opacity-60 mb-1">Time</p><h3>CLASS ROUTINE</h3>
-                    </div>
-                    <div onclick="alert('Index UI...')" class="bg-emerald-600 portal-card p-8 rounded-[2.5rem] text-white font-black italic shadow-lg">
-                        <p class="text-[10px] opacity-60 mb-1">Files</p><h3>INDEX & COVER</h3>
+                grid.innerHTML += `
+                    <div onclick="alert('GPA UI...')" class="bg-purple-600 portal-card p-8 rounded-[2.5rem] text-white font-black italic shadow-lg">
+                        <p class="text-[10px] opacity-60 mb-1">Edu</p><h3>GPA CALC</h3>
                     </div>
                 `;
             } else {
-                grid.innerHTML = `
-                    <div onclick="openCalc()" class="bg-slate-800 portal-card p-10 rounded-[2.5rem] text-white font-black italic shadow-lg">
-                        <p class="text-[10px] opacity-60 mb-1">Tools</p><h3>CALCULATOR</h3>
-                    </div>
-                    <div onclick="alert('Work Sch UI...')" class="bg-emerald-600 portal-card p-10 rounded-[2.5rem] text-white font-black italic shadow-lg">
-                        <p class="text-[10px] opacity-60 mb-1">Planning</p><h3>WORK SCHEDULE</h3>
-                    </div>
-                    <div onclick="openEMI()" class="bg-[#4f46e5] portal-card p-10 rounded-[2.5rem] text-white font-black italic shadow-lg">
-                        <p class="text-[10px] opacity-60 mb-1">Finance</p><h3>EMI CALCULATOR</h3>
+                grid.innerHTML += `
+                    <div onclick="alert('EMI UI...')" class="bg-emerald-600 portal-card p-8 rounded-[2.5rem] text-white font-black italic shadow-lg">
+                        <p class="text-[10px] opacity-60 mb-1">Finance</p><h3>EMI CALC</h3>
                     </div>
                 `;
             }
-        }
-
-        // --- CORE AUTH & APP LOGIC ---
-        function handleAuth() {
-            const u = document.getElementById('username').value;
-            const p = document.getElementById('password').value;
-            const isReg = !document.getElementById('regFields').classList.contains('hidden-section');
-            if(isReg) {
-                const n = document.getElementById('fullName').value;
-                const r = document.getElementById('userRole').value;
-                localStorage.setItem(`user_${u}`, JSON.stringify({name: n, pass: p, role: r}));
-                toggleAuthMode();
-            } else {
-                const data = JSON.parse(localStorage.getItem(`user_${u}`));
-                if(data && data.pass === p) {
-                    localStorage.setItem('active_session', u);
-                    startApp(data);
-                } else alert("Invalid Credentials");
-            }
-        }
-
-        function startApp(data) {
-            userRole = data.role;
-            document.getElementById('authScreen').classList.add('hidden-section');
-            document.getElementById('mainApp').classList.remove('hidden-section');
-            document.getElementById('displayUserName').innerText = data.name.split(' ')[0].toUpperCase();
-            document.getElementById('portalNameDisplay').innerText = userRole === 'student' ? 'Student Portal' : 'Professional Portal';
-            renderUI(); renderNotes(); renderPortal(); setupLiveInfo();
-        }
-
-        function toggleAuthMode() { document.getElementById('regFields').classList.toggle('hidden-section'); }
-        function logout() { localStorage.removeItem('active_session'); location.reload(); }
-        function closeModal() { document.getElementById('commonModal').style.display = 'none'; }
-        
-        function switchTab(id) {
-            document.getElementById('expenseTab').classList.add('hidden-section');
-            document.getElementById('portalTab').classList.add('hidden-section');
-            document.getElementById(id).classList.remove('hidden-section');
-            document.getElementById('btnExpenseTab').classList.toggle('active-tab', id === 'expenseTab');
-            document.getElementById('btnPortalTab').classList.toggle('active-tab', id === 'portalTab');
         }
 
         function setupLiveInfo() {
             setInterval(() => {
                 const n = new Date();
                 document.getElementById('dateTimeInfo').innerText = `${n.toLocaleDateString()} | ${n.toLocaleTimeString()}`;
+                
+                // Real-time Notification Check
+                const currentTime = n.getHours().toString().padStart(2, '0') + ":" + n.getMinutes().toString().padStart(2, '0');
+                routineData.forEach(item => {
+                    if(item.time === currentTime && n.getSeconds() === 0) {
+                        showNotification("Reminder", `Time for: ${item.name}`);
+                    }
+                });
             }, 1000);
         }
 
@@ -318,18 +332,16 @@
             savedNotes.unshift({id: Date.now(), text: txt, time: new Date().toLocaleString()});
             localStorage.setItem('m_saved_notes', JSON.stringify(savedNotes));
             document.getElementById('noteContent').value = ""; renderNotes();
+            showNotification("Note Saved", "Quick note added to dashboard.");
         }
 
         function renderNotes() {
-            document.getElementById('savedNotesList').innerHTML = savedNotes.map(n => `
+            document.getElementById('savedNotesList').innerHTML = savedNotes.slice(0, 3).map(n => `
                 <div class="saved-note">
                     <p class="text-slate-800">${n.text}</p>
-                    <div class="flex justify-between items-center mt-2 pt-2 border-t border-black/5">
-                        <span class="text-[8px] text-slate-400">${n.time}</span>
-                        <button onclick="deleteNote(${n.id})" class="text-rose-500 text-[9px] font-black uppercase">Delete</button>
-                    </div>
+                    <button onclick="deleteNote(${n.id})" class="text-rose-500 text-[8px] font-black uppercase mt-1">Delete</button>
                 </div>
-            `).join('');
+            `).join('') || "<p class='text-[10px] font-bold text-slate-300 uppercase'>No notes</p>";
         }
 
         function deleteNote(id) {
@@ -339,27 +351,22 @@
 
         function updateBalance() {
             const amt = parseFloat(document.getElementById('topupAmt').value || 0);
+            if(amt <= 0) return;
             balance += amt; localStorage.setItem('m_bal', balance); renderUI();
             document.getElementById('topupAmt').value = "";
-        }
-
-        function addToReminder() {
-            const amt = parseFloat(document.getElementById('expAmount').value); if(!amt) return;
-            reminders.push({id: Date.now(), cat: document.getElementById('expCategory').value, amt});
-            localStorage.setItem('m_reminders', JSON.stringify(reminders)); renderUI();
+            showNotification("Balance Updated", `৳${amt} added successfully.`);
         }
 
         function renderUI() {
             document.getElementById('mainBal').innerText = balance.toFixed(2);
-            document.getElementById('reminderList').innerHTML = reminders.map(r => `
-                <div class="flex justify-between bg-orange-50 p-3 rounded-xl border border-orange-100">
-                    <span class="text-[10px] font-bold uppercase">${r.cat}</span>
-                    <span class="text-orange-500 text-[10px] font-black uppercase">Pay ৳${r.amt}</span>
+            // Display today's tasks in QuickTaskList
+            document.getElementById('quickTaskList').innerHTML = routineData.slice(0, 3).map(r => `
+                <div class="flex items-center gap-2 mb-2">
+                    <div class="h-1.5 w-1.5 bg-emerald-500 rounded-full"></div>
+                    <span>${r.name} at ${r.time}</span>
                 </div>
-            `).join('');
+            `).join('') || "No tasks scheduled.";
         }
-
-        function clearInput() { document.getElementById('noteContent').value = ""; }
 
         window.onload = () => {
             const s = localStorage.getItem('active_session');
