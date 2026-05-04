@@ -176,6 +176,122 @@
             document.getElementById('btnPortalTab').classList.toggle('active-tab', id === 'portalTab');
         }
 
+        // --- ROUTINE / WORK SCHEDULE SYSTEM ---
+        function openRoutineManager() {
+            const isStudent = userRole === 'student';
+            const title = isStudent ? "Class Routine" : "Work Schedule";
+            document.getElementById('modalTitle').innerText = title;
+            
+            // Modified modal body based on role
+            let inputFields = isStudent ? `
+                <div class="col-span-2"><label class="p-label">Subject Name</label><input type="text" id="rName" class="p-input"></div>
+                <div><label class="p-label">Course Code</label><input type="text" id="rCode" class="p-input"></div>
+                <div><label class="p-label">Teacher Name</label><input type="text" id="rTeacher" class="p-input"></div>
+                <div><label class="p-label">Room No</label><input type="text" id="rRoom" class="p-input"></div>
+            ` : `
+                <div class="col-span-2"><label class="p-label">Work/Task Name</label><input type="text" id="rName" class="p-input" placeholder="e.g. Meeting"></div>
+                <div class="col-span-2"><label class="p-label">Date</label><input type="date" id="rDate" class="p-input"></div>
+            `;
+
+            document.getElementById('modalBody').innerHTML = `
+                <div class="space-y-4 text-left">
+                    <div class="bg-slate-50 p-5 rounded-[2rem] border border-dashed border-slate-300">
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            ${inputFields}
+                            <div><label class="p-label">Time</label><input type="time" id="rTime" class="p-input"></div>
+                            <div><label class="p-label">Day of Week</label>
+                                <select id="rDay" class="p-input font-bold text-sm">
+                                    <option>Saturday</option><option>Sunday</option><option>Monday</option>
+                                    <option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button onclick="addRoutineItem()" class="w-full bg-[#4f46e5] text-white py-3.5 rounded-2xl font-black uppercase text-[10px] shadow-lg">Set Schedule</button>
+                    </div>
+                    <div id="routineList" class="space-y-3 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar"></div>
+                </div>
+            `;
+            renderRoutineList();
+            document.getElementById('commonModal').style.display = 'flex';
+        }
+
+        function addRoutineItem() {
+            const name = document.getElementById('rName').value, 
+                  time = document.getElementById('rTime').value, 
+                  day = document.getElementById('rDay').value;
+            const date = document.getElementById('rDate') ? document.getElementById('rDate').value : '';
+
+            if(!name || !time || !day) return alert("Fill required fields!");
+            
+            routineData.push({ 
+                id: Date.now(), 
+                name, 
+                time, 
+                day, 
+                date,
+                code: document.getElementById('rCode')?.value || 'N/A', 
+                teacher: document.getElementById('rTeacher')?.value || 'N/A', 
+                room: document.getElementById('rRoom')?.value || 'N/A' 
+            });
+            
+            routineData.sort((a, b) => a.time.localeCompare(b.time));
+            localStorage.setItem('m_routine', JSON.stringify(routineData));
+            renderRoutineList();
+        }
+
+        function renderRoutineList() {
+            const list = document.getElementById('routineList');
+            if(!list) return;
+            list.innerHTML = routineData.map(item => `
+                <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex justify-between items-center">
+                    <div>
+                        <p class="text-[9px] font-black text-indigo-500 uppercase">${item.day} ${item.date ? '| ' + item.date : ''} | ${item.time}</p>
+                        <h3 class="font-black text-slate-800 text-sm uppercase">${item.name}</h3>
+                        ${userRole === 'student' ? `<p class="text-[10px] text-slate-400">Room: ${item.room} | Prof: ${item.teacher}</p>` : ''}
+                    </div>
+                    <button onclick="deleteRoutine(${item.id})" class="text-rose-400"><i class="fas fa-trash"></i></button>
+                </div>
+            `).join('');
+        }
+
+        function deleteRoutine(id) { routineData = routineData.filter(i => i.id !== id); localStorage.setItem('m_routine', JSON.stringify(routineData)); renderRoutineList(); }
+
+        // --- NOTIFICATION SYSTEM (1 Hour Before) ---
+        function startNotificationSystem() {
+            if(checkNotify) clearInterval(checkNotify);
+            checkNotify = setInterval(() => {
+                const now = new Date();
+                const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
+                const currentDate = now.toISOString().split('T')[0];
+                const currentTimeInMinutes = now.getHours() * 60 + now.getMinutes();
+
+                routineData.forEach(item => {
+                    const [h, m] = item.time.split(':');
+                    const taskTimeInMinutes = parseInt(h) * 60 + parseInt(m);
+                    const diff = taskTimeInMinutes - currentTimeInMinutes;
+
+                    // Notification condition: Same day/date and exactly 60 mins before
+                    if ((item.day === currentDay || item.date === currentDate) && diff === 60) {
+                        triggerAlert(item);
+                    }
+                });
+            }, 60000);
+        }
+
+        function triggerAlert(item) {
+            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); 
+            audio.play();
+            const alertBox = document.createElement('div');
+            alertBox.className = "fixed top-10 left-1/2 -translate-x-1/2 z-[9999] bg-[#4f46e5] text-white p-6 rounded-[2rem] shadow-2xl border-4 border-white text-center w-[90%] max-sm";
+            alertBox.innerHTML = `
+                <div class="animate-bounce mb-2"><i class="fas fa-bell text-3xl"></i></div>
+                <h2 class="font-black text-lg uppercase italic">Reminder!</h2>
+                <p class="text-xs opacity-90 mt-1 font-bold">${item.name} starts in 1 hour</p>
+            `;
+            document.body.appendChild(alertBox);
+            setTimeout(() => { alertBox.remove(); }, 30000);
+        }
+
         // --- GPA CALCULATOR SYSTEM ---
         function openGPA() {
             document.getElementById('modalTitle').innerText = "GPA Calculator";
@@ -238,75 +354,7 @@
             document.getElementById('gradeStatus').innerText = gpa >= 3.75 ? "Result: Brilliant" : (gpa >= 2.0 ? "Result: Passed" : "Result: N/A");
         }
 
-        // --- ROUTINE SYSTEM ---
-        function openRoutineManager() {
-            const title = userRole === 'student' ? "Class Routine" : "Work Schedule";
-            document.getElementById('modalTitle').innerText = title;
-            document.getElementById('modalBody').innerHTML = `
-                <div class="space-y-4 text-left">
-                    <div class="bg-slate-50 p-5 rounded-[2rem] border border-dashed border-slate-300">
-                        <div class="grid grid-cols-2 gap-3 mb-4">
-                            <div class="col-span-2"><label class="p-label">Subject Name</label><input type="text" id="rName" class="p-input"></div>
-                            <div><label class="p-label">Course Code</label><input type="text" id="rCode" class="p-input"></div>
-                            <div><label class="p-label">Teacher Name</label><input type="text" id="rTeacher" class="p-input"></div>
-                            <div><label class="p-label">Room No</label><input type="text" id="rRoom" class="p-input"></div>
-                            <div><label class="p-label">Time</label><input type="time" id="rTime" class="p-input"></div>
-                            <div class="col-span-2"><label class="p-label">Day of Week</label><select id="rDay" class="p-input font-bold text-sm"><option>Saturday</option><option>Sunday</option><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option></select></div>
-                        </div>
-                        <button onclick="addRoutineItem()" class="w-full bg-[#4f46e5] text-white py-3.5 rounded-2xl font-black uppercase text-[10px] shadow-lg">Add to Schedule</button>
-                    </div>
-                    <div id="routineList" class="space-y-3 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar"></div>
-                </div>
-            `;
-            renderRoutineList();
-            document.getElementById('commonModal').style.display = 'flex';
-        }
-
-        function addRoutineItem() {
-            const name = document.getElementById('rName').value, time = document.getElementById('rTime').value, day = document.getElementById('rDay').value;
-            if(!name || !time || !day) return alert("Fill required fields!");
-            routineData.push({ id: Date.now(), name, time, day, code: document.getElementById('rCode').value || 'N/A', teacher: document.getElementById('rTeacher').value || 'N/A', room: document.getElementById('rRoom').value || 'N/A' });
-            routineData.sort((a, b) => a.time.localeCompare(b.time));
-            localStorage.setItem('m_routine', JSON.stringify(routineData));
-            renderRoutineList();
-        }
-
-        function renderRoutineList() {
-            const list = document.getElementById('routineList');
-            if(!list) return;
-            list.innerHTML = routineData.map(item => `
-                <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex justify-between items-center">
-                    <div><p class="text-[9px] font-black text-indigo-500 uppercase">${item.day} | ${item.time}</p><h3 class="font-black text-slate-800 text-sm uppercase">${item.name}</h3><p class="text-[10px] text-slate-400">Room: ${item.room} | Prof: ${item.teacher}</p></div>
-                    <button onclick="deleteRoutine(${item.id})" class="text-rose-400"><i class="fas fa-trash"></i></button>
-                </div>
-            `).join('');
-        }
-
-        function deleteRoutine(id) { routineData = routineData.filter(i => i.id !== id); localStorage.setItem('m_routine', JSON.stringify(routineData)); renderRoutineList(); }
-
-        function startNotificationSystem() {
-            if(checkNotify) clearInterval(checkNotify);
-            checkNotify = setInterval(() => {
-                const now = new Date(), currentDay = now.toLocaleDateString('en-US', { weekday: 'long' }), currentTime = now.getHours() * 60 + now.getMinutes();
-                routineData.forEach(item => {
-                    if (item.day === currentDay) {
-                        const [h, m] = item.time.split(':'), classTime = parseInt(h) * 60 + parseInt(m), diff = classTime - currentTime;
-                        if (diff === 45) triggerAlert(item);
-                    }
-                });
-            }, 60000);
-        }
-
-        function triggerAlert(item) {
-            const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); audio.play();
-            const alertBox = document.createElement('div');
-            alertBox.className = "fixed top-10 left-1/2 -translate-x-1/2 z-[9999] bg-[#4f46e5] text-white p-6 rounded-[2rem] shadow-2xl border-4 border-white text-center w-[90%] max-w-sm";
-            alertBox.innerHTML = `<div class="animate-bounce mb-2"><i class="fas fa-bell text-3xl"></i></div><h2 class="font-black text-lg uppercase italic">Class Reminder!</h2><p class="text-xs opacity-90 mt-1 font-bold">${item.name} in 45 mins</p>`;
-            document.body.appendChild(alertBox);
-            setTimeout(() => { alertBox.remove(); }, 30000);
-        }
-
-        // --- OTHER UTILS ---
+        // --- CALCULATOR UTILS ---
         function openCalc() {
             document.getElementById('modalTitle').innerText = "Calculator";
             document.getElementById('modalBody').innerHTML = `
@@ -325,6 +373,7 @@
         function cC() { document.getElementById('cDisp').value = '0'; }
         function cE() { try { document.getElementById('cDisp').value = eval(document.getElementById('cDisp').value); } catch { document.getElementById('cDisp').value = 'Error'; } }
 
+        // --- UI RENDERING ---
         function renderPortal() {
             const grid = document.getElementById('portalGrid');
             if(userRole === 'student') {
@@ -341,7 +390,6 @@
             }
         }
 
-        // --- আপডেট করা টাইম ফাংশন ---
         function setupLiveInfo() {
             setInterval(() => {
                 const n = new Date();
